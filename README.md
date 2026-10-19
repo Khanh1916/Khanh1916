@@ -29,8 +29,7 @@ I work on both sides of security, and on keeping data private while learning fro
 <img src="https://img.shields.io/badge/Bash-4EAA25?style=flat-square&logo=gnubash&logoColor=white" alt="Bash"/>
 <img src="https://img.shields.io/badge/PowerShell-5391FE?style=flat-square" alt="PowerShell"/>
 <img src="https://img.shields.io/badge/PHP-777BB4?style=flat-square&logo=php&logoColor=white" alt="PHP"/>
-<img src="https://img.shields.io/badge/C-A8B9CC?style=flat-square&logo=c&logoColor=black" alt="C"/>
-<img src="https://img.shields.io/badge/SQL%20%2F%20PL%2FSQL-336791?style=flat-square" alt="SQL / PL/SQL"/>
+<img src="https://img.shields.io/badge/SQL-336791?style=flat-square" alt="SQL"/>
 
 **Infrastructure &amp; DevSecOps**<br/>
 <img src="https://img.shields.io/badge/Linux-FCC624?style=flat-square&logo=linux&logoColor=black" alt="Linux"/>
