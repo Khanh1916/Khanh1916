@@ -68,5 +68,6 @@ If my labs or tools helped you learn or build something, you can support me here
 
 <p>
   <a href="https://github.com/sponsors/Khanh1916"><img src="https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="GitHub Sponsors"/></a>
+  <a href="https://ko-fi.com/khanh1916"><img src="https://img.shields.io/badge/Support-Ko--fi-FF5E5B?style=for-the-badge&logo=kofi&logoColor=white" alt="Ko-fi"/></a>
   <a href="https://me.momo.vn/j8I5TbsbtxizUqtafoIKiv"><img src="https://img.shields.io/badge/Donate-MoMo-A50064?style=for-the-badge" alt="MoMo"/></a>
 </p>
