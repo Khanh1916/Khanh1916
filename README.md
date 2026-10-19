@@ -2,7 +2,7 @@
 
 <p align="center">
   <em>a.k.a. Cao Thanh Lam · <a href="https://github.com/Khanh1916">@Khanh1916</a></em><br/>
-  <strong>Cybersecurity student &amp; researcher</strong>
+  <strong>Cybersecurity researcher</strong>
 </p>
 
 <p align="center">
