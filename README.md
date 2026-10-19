@@ -1,4 +1,4 @@
-<h1 align="center">Hi, I'm Nguyen Nam Khanh 👋</h1>
+<h1 align="center">Hi, I'm Nguyen Nam Khanh</h1>
 
 <p align="center">
   <em>a.k.a. Cao Thanh Lam · <a href="https://github.com/Khanh1916">@Khanh1916</a></em><br/>
@@ -12,16 +12,16 @@
 
 ---
 
-### 🧭 About me
+### About me
 
 I work on both sides of security, and on keeping data private while learning from it:
 
-- 🗡️ **Offensive security**: web and database exploitation, pentest walkthroughs, and intentionally vulnerable CTF labs.
-- 🛡️ **Defensive security**: system hardening, CIS-style compliance checks, and configuration drift detection across Linux, Windows, Cisco, and Juniper.
-- 🔬 **Privacy-preserving ML**: federated learning, differential privacy, and secure aggregation for IoT intrusion detection.
-- ⚙️ **Backend in Go**: secure REST APIs and web apps with authentication, authorization, and rate limiting.
+- **Offensive security**: web and database exploitation, pentest walkthroughs, and intentionally vulnerable CTF labs.
+- **Defensive security**: system hardening, CIS-style compliance checks, and configuration drift detection across Linux, Windows, Cisco, and Juniper.
+- **Privacy-preserving ML**: federated learning, differential privacy, and secure aggregation for IoT intrusion detection.
+- **Backend in Go**: secure REST APIs and web apps with authentication, authorization, and rate limiting.
 
-### 🧰 Tech stack
+### Tech stack
 
 **Languages**<br/>
 <img src="https://img.shields.io/badge/Go-00ADD8?style=flat-square&logo=go&logoColor=white" alt="Go"/>
@@ -51,7 +51,7 @@ I work on both sides of security, and on keeping data private while learning fro
 <img src="https://img.shields.io/badge/pandas-150458?style=flat-square&logo=pandas&logoColor=white" alt="pandas"/>
 <img src="https://img.shields.io/badge/NumPy-013243?style=flat-square&logo=numpy&logoColor=white" alt="NumPy"/>
 
-### 🚀 Featured projects
+### Featured projects
 
 | Project | What it is | Stack |
 |:---|:---|:---|
@@ -62,9 +62,12 @@ I work on both sides of security, and on keeping data private while learning fro
 | [**greenlight**](https://github.com/Khanh1916/greenlight) | Movie catalog REST API with token authentication, permissions, filtering, and rate limiting. | Go · PostgreSQL |
 | [**snippetbox**](https://github.com/Khanh1916/snippetbox) | Secure code-snippet sharing web app with user accounts, sessions, and server-rendered pages. | Go · MySQL |
 
-### 💖 Support my work
+### Support my work
 
-If my labs or tools helped you learn or build something, you can support me here. Thank you!
+If my labs or tools helped you learn or build something, you can support me. Thank you!
+
+- **International:** [GitHub Sponsors](https://github.com/sponsors/Khanh1916) is preferred. [Ko-fi](https://ko-fi.com/khanh1916) also works if you'd rather pay by card or PayPal without a GitHub account.
+- **Vietnam:** [MoMo](https://me.momo.vn/j8I5TbsbtxizUqtafoIKiv) is preferred.
 
 <p>
   <a href="https://github.com/sponsors/Khanh1916"><img src="https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="GitHub Sponsors"/></a>
