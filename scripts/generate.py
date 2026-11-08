@@ -620,10 +620,6 @@ def fetch():
     return payload["data"]["user"]
 
 
-def md_escape(text):
-    return re.sub(r"([\\`*_\[\]<>])", r"\\\1", text)
-
-
 def replace_block(text, name, block):
     start, end = f"<!-- {name}:start -->", f"<!-- {name}:end -->"
     pattern = re.compile(re.escape(start) + ".*?" + re.escape(end), re.S)
@@ -651,27 +647,19 @@ def main():
     }
 
     links = []
-    featured = set()
     for entry in config["featured"]:
         repo = by_name.get(entry["repo"])
         if repo is None:
             print(f"warning: featured repo {entry['repo']} is not public or is hidden", file=sys.stderr)
             continue
-        featured.add(repo["name"])
         draw = ANIMATIONS.get(entry.get("animation"), anim_languages)
         filename = f"card-{repo['name'].lower()}.svg"
         files[filename] = card(len(links) + 1, repo, entry["tag"], COLOURS.get(entry.get("color"), SOFT), *draw(repo))
         alt = html.escape(f"{repo['name']}: {' '.join(summarize(repo.get('description')))}", quote=True)
         links.append(f'  <a href="{repo["url"]}"><img src="{RAW}/{filename}" alt="{alt}"/></a>')
 
-    log_lines = ["Also in the logs:", ""]
-    for repo in [r for r in visible if r["name"] not in featured][:8]:
-        about = " ".join(summarize(repo.get("description"), width=110, max_lines=1))
-        log_lines.append(f"- [{md_escape(repo['name'])}]({repo['url']})" + (f": {md_escape(about)}" if about else ""))
-
     readme = README.read_text(encoding="utf-8")
     readme = replace_block(readme, "findings", '<p align="center">\n' + "\n".join(links) + "\n</p>")
-    readme = replace_block(readme, "logs", "\n".join(log_lines))
     README.write_text(readme, encoding="utf-8", newline="\n")
 
     OUT.mkdir(exist_ok=True)

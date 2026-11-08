@@ -73,17 +73,6 @@ You're the pentester now. Here's what the scan found.
 
 <!-- findings:end -->
 
-<!-- logs:start -->
-
-Also in the logs:
-
-- [media-to-mp3](https://github.com/Khanh1916/media-to-mp3): A cross-platform Python app to download Youtube and Facebook videos as high-quality MP3, with GUI and CLI
-- [blackbox-website-pentest-poc](https://github.com/Khanh1916/blackbox-website-pentest-poc)
-- [vul-web-walkthrough](https://github.com/Khanh1916/vul-web-walkthrough)
-- [null-cybersecurity-walkthrough](https://github.com/Khanh1916/null-cybersecurity-walkthrough)
-
-<!-- logs:end -->
-
 ### `$ tcpdump`
 
 <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/activity.svg" width="100%" alt="My contribution calendar over the past year, drawn as a packet capture. Refreshed daily by GitHub Actions."/>
