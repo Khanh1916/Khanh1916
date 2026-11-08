@@ -1,0 +1,40 @@
+name: rescan
+
+# Redraws the profile from live repo data: About text, stars, languages,
+# releases, new public repos and contributions.
+# 18:17 UTC is 01:17 in Vietnam.
+on:
+  schedule:
+    - cron: "17 18 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - profile.json
+      - scripts/**
+
+permissions:
+  contents: write
+
+jobs:
+  rescan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Redraw SVGs
+        run: python3 scripts/generate.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit if anything changed
+        run: |
+          git add assets README.md
+          if git diff --cached --quiet; then
+            echo "No changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: rescan profile assets"
+          git push

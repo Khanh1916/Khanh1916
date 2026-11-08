@@ -1,27 +1,34 @@
-<h1 align="center">Hi, I'm Nguyen Nam Khanh</h1>
+<!-- 31337/tcp stage 1: UG9ydCAzMTMzNyBhbnN3ZXJlZC4gUmVhZCB0aGUgc291cmNlIG9mIGFzc2V0cy9oZXJvLnN2Zy4gSGV4LCBYT1IsIGFuZCB0aGUga2V5IGlzIHRoZSBzZXJ2aWNlIG5hbWUgb24gcG9ydCAxODgzLg== -->
+
+<a href="https://github.com/Khanh1916">
+  <picture>
+    <source media="(max-width: 600px)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/hero-compact.svg">
+    <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/hero.svg" width="100%" alt="Nguyen Nam Khanh, a.k.a. Cao Thanh Lam. Cybersecurity researcher: I break systems to see how they fail, I harden them and catch the drift, and I learn from data without reading it.">
+  </picture>
+</a>
 
 <p align="center">
-  <em>a.k.a. Cao Thanh Lam · <a href="https://github.com/Khanh1916">@Khanh1916</a></em><br/>
-  <strong>Cybersecurity researcher</strong>
+  <a href="mailto:southkhanh@gmail.com"><img src="https://img.shields.io/badge/Email-southkhanh%40gmail.com-EA4335?style=flat-square&logo=gmail&logoColor=white" alt="Email"/></a>
+  <a href="https://www.facebook.com/n72khanh"><img src="https://img.shields.io/badge/Facebook-n72khanh-0866FF?style=flat-square&logo=facebook&logoColor=white" alt="Facebook"/></a>
+  <a href="https://github.com/sponsors/Khanh1916"><img src="https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-EA4AAA?style=flat-square&logo=githubsponsors&logoColor=white" alt="GitHub Sponsors"/></a>
 </p>
 
-<p align="center">
-  <a href="mailto:southkhanh@gmail.com"><img src="https://img.shields.io/badge/Email-southkhanh%40gmail.com-EA4335?style=for-the-badge&logo=gmail&logoColor=white" alt="Email"/></a>
-  <a href="https://www.facebook.com/n72khanh"><img src="https://img.shields.io/badge/Facebook-n72khanh-0866FF?style=for-the-badge&logo=facebook&logoColor=white" alt="Facebook"/></a>
-</p>
+### `$ whoami`
 
----
+I attack systems to learn how they fail, then build the tools that stop it happening again. Lately I've been stuck on a harder question: **how do you train an intrusion detector on traffic nobody is allowed to see?**
 
-### About me
+You're the pentester now. Here's what the scan found.
 
-I work on both sides of security, and on keeping data private while learning from it:
+### `$ nmap`
 
-- **Offensive security**: web and database exploitation, pentest walkthroughs, and intentionally vulnerable CTF labs.
-- **Defensive security**: system hardening, CIS-style compliance checks, and configuration drift detection across Linux, Windows, Cisco, and Juniper.
-- **Privacy-preserving ML**: federated learning, differential privacy, and secure aggregation for IoT intrusion detection.
-- **Backend in Go**: secure REST APIs and web apps with authentication, authorization, and rate limiting.
+<picture>
+  <source media="(max-width: 600px)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/nmap-compact.svg">
+  <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/nmap.svg" width="100%" alt="An animated nmap scan of this profile. Open services map to skills: ssh, oracle-tns, mqtt, docker, mysql, postgresql, ml-stack, kubernetes, http-go, flower. Port 31337 is filtered and marked flag.">
+</picture>
 
-### Tech stack
+<details>
+<summary>Prefer it without the theatre? Full stack in plain text</summary>
+<br/>
 
 **Languages**<br/>
 <img src="https://img.shields.io/badge/Go-00ADD8?style=flat-square&logo=go&logoColor=white" alt="Go"/>
@@ -51,18 +58,59 @@ I work on both sides of security, and on keeping data private while learning fro
 <img src="https://img.shields.io/badge/pandas-150458?style=flat-square&logo=pandas&logoColor=white" alt="pandas"/>
 <img src="https://img.shields.io/badge/NumPy-013243?style=flat-square&logo=numpy&logoColor=white" alt="NumPy"/>
 
-### Featured projects
+</details>
 
-| Project | What it is | Stack |
-|:---|:---|:---|
-| [**oracle-sec-lab**](https://github.com/Khanh1916/oracle-sec-lab) | Intentionally vulnerable Oracle-backed university portal with 3 CTF challenges (SQL injection, logic flaw, supply-chain poisoning). Runs on a VM, Docker Compose, or Kubernetes. | PHP · Oracle · Docker |
-| [**secbaseline**](https://github.com/Khanh1916/secbaseline) | 131 CIS-style hardening controls, compliance reports, and drift detection for Linux, Windows, Cisco, and Juniper in one Go CLI. | Go · Bash · PowerShell |
-| [**PP-FedData**](https://github.com/Khanh1916/PP-FedData) | Privacy-preserving synthetic data for federated intrusion detection on IoT/MQTT gateways, using differential privacy and secure aggregation. | Python · PyTorch · Flower |
-| [**FedGAGAN-Reproduction**](https://github.com/Khanh1916/FedGAGAN-Reproduction) | Independent reproduction of FedGAGAN: federated learning with a GA-optimized WGAN-GP for IoT IDS data augmentation. | Python · TensorFlow |
-| [**greenlight**](https://github.com/Khanh1916/greenlight) | Movie catalog REST API with token authentication, permissions, filtering, and rate limiting. | Go · PostgreSQL |
-| [**snippetbox**](https://github.com/Khanh1916/snippetbox) | Secure code-snippet sharing web app with user accounts, sessions, and server-rendered pages. | Go · MySQL |
+### `$ cat findings.md`
 
-### Support my work
+<!-- findings:start -->
+
+<p align="center">
+  <a href="https://github.com/Khanh1916/oracle-sec-lab"><img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/card-oracle-sec-lab.svg" alt="oracle-sec-lab: Student portal with deliberate Oracle and PHP vulnerabilities, for practicing database security and CTFs."/></a>
+  <a href="https://github.com/Khanh1916/secbaseline"><img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/card-secbaseline.svg" alt="secbaseline: Security hardening checks, compliance reports and drift detection for Linux, Windows, Cisco and Juniper."/></a>
+  <a href="https://github.com/Khanh1916/PP-FedData"><img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/card-pp-feddata.svg" alt="PP-FedData: Privacy-preserving synthetic data for federated learning"/></a>
+  <a href="https://github.com/Khanh1916/viet-skill"><img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/card-viet-skill.svg" alt="viet-skill: Skill cho AI agent: lịch âm tính theo giờ Việt Nam (AI hay nhầm sang lịch Trung Quốc) và văn bản hành chính theo Nghị định 30"/></a>
+</p>
+
+<!-- findings:end -->
+
+<!-- logs:start -->
+
+Also in the logs:
+
+- [media-to-mp3](https://github.com/Khanh1916/media-to-mp3): A cross-platform Python app to download Youtube and Facebook videos as high-quality MP3, with GUI and CLI
+- [blackbox-website-pentest-poc](https://github.com/Khanh1916/blackbox-website-pentest-poc)
+- [vul-web-walkthrough](https://github.com/Khanh1916/vul-web-walkthrough)
+- [null-cybersecurity-walkthrough](https://github.com/Khanh1916/null-cybersecurity-walkthrough)
+
+<!-- logs:end -->
+
+### `$ tcpdump`
+
+<img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/activity.svg" width="100%" alt="My contribution calendar over the past year, drawn as a packet capture. Refreshed daily by GitHub Actions."/>
+
+### `$ nc khanh1916 31337`
+
+<details>
+<summary><b>The scan flagged one filtered port. There is a real flag hidden in this profile.</b></summary>
+<br/>
+
+No guessing and no brute force. A browser is enough.
+
+1. Read this page the way a browser doesn't.
+2. Whatever you find there will send you somewhere else. The scan above has the last piece.
+
+Check your answer locally, so nobody has to see it:
+
+```bash
+echo -n 'flag{...}' | sha256sum
+# b83a1eafdd4db16c84ffdec5f733d35f4a43a31df18a928cf728bceab8ebcd80
+```
+
+Got it? [Tell me how you solved it.](mailto:southkhanh@gmail.com?subject=31337%20solved)
+
+</details>
+
+### `$ ./support`
 
 If my labs or tools helped you learn or build something, you can support me. Thank you!
 
@@ -74,3 +122,5 @@ If my labs or tools helped you learn or build something, you can support me. Tha
   <a href="https://ko-fi.com/khanh1916"><img src="https://img.shields.io/badge/Support-Ko--fi-FF5E5B?style=for-the-badge&logo=kofi&logoColor=white" alt="Ko-fi"/></a>
   <a href="https://me.momo.vn/j8I5TbsbtxizUqtafoIKiv"><img src="https://img.shields.io/badge/Donate-MoMo-A50064?style=for-the-badge" alt="MoMo"/></a>
 </p>
+
+<img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/signoff.svg" width="100%" alt="Connection closed. Tôi vẫn ở đây: I am still here."/>

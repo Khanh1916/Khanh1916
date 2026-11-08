@@ -1,0 +1,15 @@
+{
+  "featured": [
+    { "repo": "oracle-sec-lab", "tag": "RED", "color": "red", "animation": "oracle" },
+    { "repo": "secbaseline", "tag": "BLUE", "color": "blue", "animation": "secbaseline" },
+    { "repo": "PP-FedData", "tag": "GREEN", "color": "green", "animation": "federated" },
+    { "repo": "viet-skill", "tag": "AI AGENTS", "color": "amber", "animation": "lunar" }
+  ],
+  "hidden": [
+    "greenlight",
+    "snippetbox",
+    "FedGAGAN-Reproduction",
+    "larp-cap",
+    "IAM302-FPT"
+  ]
+}
