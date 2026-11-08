@@ -118,80 +118,107 @@ def typed(name, x, y, chars, size, bg, total, start, duration, end):
 
 # ---------------------------------------------------------------- hero
 
-def shield(cx, cy):
-    return (
-        f'<g class="sh"><path d="M{cx} {cy - 22}l17 6v13c0 13-10 21-17 25c-7-4-17-12-17-25v-13z" '
-        f'fill="{PANEL}" stroke="{BLUE}" stroke-width="2.5"/>'
-        f'<path d="M{cx - 8} {cy}l6 6l11-12" fill="none" stroke="{BLUE}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></g>'
+FONT5X7 = {
+    "N": "10001 11001 10101 10011 10001 10001 10001", "G": "01110 10001 10000 10111 10001 10001 01110",
+    "U": "10001 10001 10001 10001 10001 10001 01110", "Y": "10001 10001 01010 00100 00100 00100 00100",
+    "E": "11111 10000 10000 11110 10000 10000 11111", "A": "01110 10001 10001 11111 10001 10001 10001",
+    "M": "10001 11011 10101 10101 10001 10001 10001", "K": "10001 10010 10100 11000 10100 10010 10001",
+    "H": "10001 10001 10001 11111 10001 10001 10001",
+}
+LED_BLACK, LED_OFF, LED_AMBER, LED_SOFT, LED_TEXT = "#0a0a09", "#1e1c17", "#ffb000", "#b89a5e", "#eadcc0"
+HERO_COLUMNS = [
+    ("RED / OFFENSE", RED, "I break systems", "to see how they fail."),
+    ("BLUE / DEFENSE", BLUE, "I harden them", "and catch the drift."),
+    ("GREEN / PRIVACY", GREEN, "I learn from data", "without reading it."),
+]
+
+
+def led_board(x0, y0, pitch, dot, columns, rows, lines, total):
+    """A dot-matrix panel. lines: (text, first column, first row)."""
+    board = (
+        f'<defs><pattern id="led" x="{x0}" y="{y0}" width="{pitch}" height="{pitch}" patternUnits="userSpaceOnUse">'
+        f'<rect width="{dot}" height="{dot}" fill="{LED_OFF}"/></pattern></defs>'
+        f'<rect x="{x0}" y="{y0}" width="{columns * pitch:.1f}" height="{rows * pitch:.1f}" fill="url(#led)"/>'
     )
+    anim, index = "", 0
+    for text, start_column, start_row in lines:
+        for position, letter in enumerate(text):
+            if letter == " ":
+                continue
+            glyph = FONT5X7[letter].split()
+            squares = "".join(
+                f"M{x0 + (start_column + position * 6 + c) * pitch:.1f} {y0 + (start_row + r) * pitch:.1f}h{dot}v{dot}h-{dot}z"
+                for r in range(7) for c in range(5) if glyph[r][c] == "1"
+            )
+            board += f'<path class="k{index}" d="{squares}" fill="{LED_AMBER}"/>'
+            anim += shown(f"k{index}", 0.3 + index * 0.1, total - 0.6, total)
+            index += 1
+    return board, anim
+
+
+def led_wire(width, y, margin):
+    """Attack packets stop at the shield; only noised squares continue."""
+    left, right, cx = margin, width - margin, width // 2
+    run_in, run_out = cx - 18 - left - 12, right - cx - 24
+    body = f'<rect x="{left}" y="{y - .75}" width="{right - left}" height="1.5" fill="#3a352a"/>'
+    anim = (
+        f"@keyframes pk{{0%{{transform:translateX(0);opacity:0}}4%,94%{{opacity:1}}100%{{transform:translateX({run_in}px);opacity:0}}}}"
+        ".pk{animation:pk 3s linear infinite}"
+    )
+    for i in range(5):
+        body += f'<rect class="pk" x="{left}" y="{y - 3}" width="12" height="6" fill="{RED}" style="animation-delay:{-i * .6:.1f}s"/>'
+    for n, (a, b, c) in enumerate(((-8, 7, -4), (9, -9, 5), (-6, 8, 0))):
+        anim += (
+            f"@keyframes o{n}{{0%{{transform:translate(0,0);opacity:0}}4%,94%{{opacity:1}}30%{{transform:translate({run_out * .3:.0f}px,{a}px)}}"
+            f"65%{{transform:translate({run_out * .65:.0f}px,{b}px)}}100%{{transform:translate({run_out}px,{c}px);opacity:0}}}}"
+            f".o{n}{{animation:o{n} 3s linear infinite}}"
+        )
+    for i in range(5):
+        body += f'<rect class="ot o{i % 3}" x="{cx + 24}" y="{y - 2.5}" width="5" height="5" fill="{GREEN}" style="animation-delay:{-i * .6:.1f}s"/>'
+    body += (
+        f'<path d="M{cx} {y - 22}l17 6v13c0 13-10 21-17 25c-7-4-17-12-17-25v-13z" fill="{LED_BLACK}" stroke="{LED_AMBER}" stroke-width="2.5"/>'
+        f'<path d="M{cx - 8} {y}l6 6l11-12" fill="none" stroke="{LED_AMBER}" stroke-width="2.5" stroke-linecap="square"/>'
+    )
+    return body, ".pk,.ot{opacity:0}", anim
 
 
 def hero(compact):
-    w, h = (480, 410) if compact else (860, 322)
-    cx = w // 2
-    size = 38 if compact else 62
-    name = "NGUYEN NAM KHANH"
-    name_y, wire_y = (106, 176) if compact else (112, 188)
-    defs = (
-        f'<defs><radialGradient id="r"><stop offset="0" stop-color="{RED}" stop-opacity=".2"/><stop offset="1" stop-color="{RED}" stop-opacity="0"/></radialGradient>'
-        f'<radialGradient id="b"><stop offset="0" stop-color="{BLUE}" stop-opacity=".2"/><stop offset="1" stop-color="{BLUE}" stop-opacity="0"/></radialGradient>'
-        f'<radialGradient id="g"><stop offset="0" stop-color="{GREEN}" stop-opacity=".18"/><stop offset="1" stop-color="{GREEN}" stop-opacity="0"/></radialGradient>'
-        f'<pattern id="p" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#fff" stroke-opacity=".035"/></pattern>'
-        f'<clipPath id="f"><rect width="{w}" height="{h}" rx="16"/></clipPath></defs>'
-    )
-    parts = [defs, f'<g clip-path="url(#f)"><rect width="{w}" height="{h}" fill="{BG}"/>']
-    glow = w * 0.36
-    for gid, gx in (("r", w * 0.14), ("b", w * 0.5), ("g", w * 0.86)):
-        parts.append(f'<circle cx="{gx:.0f}" cy="{h * 0.55:.0f}" r="{glow:.0f}" fill="url(#{gid})"/>')
-    parts.append(f'<rect width="{w}" height="{h}" fill="url(#p)"/></g>')
-    parts.append(f'<rect x=".75" y=".75" width="{w - 1.5}" height="{h - 1.5}" rx="15.5" fill="none" stroke="{BORDER}" stroke-width="1.5"/>')
-    parts.append(t(cx, name_y - size - 8, "// CYBERSECURITY RESEARCHER", 13 if compact else 15, SOFT, anchor="middle", track=0.12))
-    track = 0.02 if compact else 0.05
-    parts.append(t(cx - 2, name_y, name, size, RED, True, "middle", track, "gr"))
-    parts.append(t(cx + 2, name_y, name, size, BLUE, True, "middle", track, "gb"))
-    parts.append(t(cx, name_y, name, size, "#ffffff", True, "middle", track))
-    parts.append(t(cx, name_y + 30, "a.k.a. Cao Thanh Lam  /  @Khanh1916", 14 if compact else 16, SOFT, anchor="middle"))
-
-    left, right = 32, w - 32
-    parts.append(f'<line x1="{left}" y1="{wire_y}" x2="{right}" y2="{wire_y}" stroke="#303a47" stroke-width="2" stroke-dasharray="2 6" stroke-linecap="round"/>')
-    run_in = cx - 18 - left - 12
-    run_out = right - cx - 24
-    for i in range(5):
-        parts.append(f'<rect class="pk" x="{left}" y="{wire_y - 3}" width="12" height="6" rx="1.5" fill="{RED}" style="animation-delay:{-i * 0.6:.1f}s"/>')
-    for i in range(5):
-        parts.append(f'<circle class="dp d{i % 3}" cx="{cx + 24}" cy="{wire_y}" r="3.2" fill="{GREEN}" style="animation-delay:{-i * 0.6:.1f}s"/>')
-    parts.append(shield(cx, wire_y))
-
-    columns = [
-        ("RED / OFFENSE", RED, "I break systems", "to see how they fail."),
-        ("BLUE / DEFENSE", BLUE, "I harden them", "and catch the drift."),
-        ("GREEN / PRIVACY", GREEN, "I learn from data", "without reading it."),
-    ]
-    for i, (label, colour, first, second) in enumerate(columns):
+    total = 12
+    if compact:
+        w, h = 480, 452
+        board, anim = led_board(33.5, 50, 7, 5.6, 59, 17, [("NGUYEN NAM", 0, 1), ("KHANH", 15, 9)], total)
+        label_y, aka_y, wire_y = 34, 196, 238
+    else:
+        w, h = 860, 322
+        board, anim = led_board(31, 52, 8.4, 6.6, 95, 9, [("NGUYEN NAM KHANH", 0, 1)], total)
+        label_y, aka_y, wire_y = 36, 156, 192
+    cx = w / 2
+    parts = [f'<rect x=".75" y=".75" width="{w - 1.5}" height="{h - 1.5}" rx="11" fill="{LED_BLACK}" stroke="#2c2820" stroke-width="1.5"/>', board]
+    parts.append(t(cx, label_y, "CYBERSECURITY RESEARCHER", 13 if compact else 15, LED_AMBER, anchor="middle", track=0.12))
+    parts.append(t(cx, aka_y, "a.k.a. Cao Thanh Lam  /  @Khanh1916", 14 if compact else 16, LED_SOFT, anchor="middle"))
+    wire, base, wire_anim = led_wire(w, wire_y, 24 if compact else 36)
+    parts.append(wire)
+    anim += wire_anim
+    for i, (label, colour, first, second) in enumerate(HERO_COLUMNS):
         if compact:
-            y = 226 + i * 60
-            items = t(32, y, label, 13, colour, True, track=0.06) + t(32, y + 26, f"{first} {second}", 15, TEXT)
+            y = 292 + i * 56
+            parts.append(f'<rect x="30" y="{y - 10}" width="9" height="9" fill="{colour}"/>')
+            parts.append(t(47, y, label, 13, colour, True, track=0.06))
+            parts.append(t(30, y + 25, f"{first} {second}", 15, LED_TEXT))
         else:
             x = (150, 430, 710)[i]
-            items = (t(x, 240, label, 14, colour, True, "middle", 0.08)
-                     + t(x, 271, first, 19, TEXT, anchor="middle")
-                     + t(x, 297, second, 19, TEXT, anchor="middle"))
-        parts.append(f'<g class="c{i}">{items}</g>')
-
-    base = ".pk,.dp{opacity:0}"
-    anim = (
-        f"@keyframes pk{{0%{{transform:translateX(0);opacity:0}}6%,92%{{opacity:1}}100%{{transform:translateX({run_in}px);opacity:0}}}}"
-        ".pk{animation:pk 3s linear infinite}"
-        f"@keyframes d0{{0%{{transform:translate(0,0);opacity:0}}8%{{opacity:1}}30%{{transform:translate({run_out * .3:.0f}px,-9px)}}60%{{transform:translate({run_out * .6:.0f}px,8px)}}92%{{opacity:1}}100%{{transform:translate({run_out}px,-4px);opacity:0}}}}"
-        f"@keyframes d1{{0%{{transform:translate(0,0);opacity:0}}8%{{opacity:1}}25%{{transform:translate({run_out * .25:.0f}px,10px)}}70%{{transform:translate({run_out * .7:.0f}px,-10px)}}92%{{opacity:1}}100%{{transform:translate({run_out}px,6px);opacity:0}}}}"
-        f"@keyframes d2{{0%{{transform:translate(0,0);opacity:0}}8%{{opacity:1}}45%{{transform:translate({run_out * .45:.0f}px,-7px)}}75%{{transform:translate({run_out * .75:.0f}px,9px)}}92%{{opacity:1}}100%{{transform:translate({run_out}px,0);opacity:0}}}}"
-        ".d0{animation:d0 3s linear infinite}.d1{animation:d1 3s linear infinite}.d2{animation:d2 3s linear infinite}"
-        "@keyframes sh{0%,100%{opacity:1}50%{opacity:.62}}.sh{animation:sh .6s ease-in-out infinite}"
-        "@keyframes gr{0%,91%,100%{transform:translate(0,0)}92%{transform:translate(-9px,2px)}94%{transform:translate(6px,-2px)}96%{transform:translate(-4px,0)}}.gr{animation:gr 6s steps(1,end) infinite}"
-        "@keyframes gb{0%,91%,100%{transform:translate(0,0)}92%{transform:translate(9px,-2px)}94%{transform:translate(-6px,2px)}96%{transform:translate(4px,0)}}.gb{animation:gb 6s steps(1,end) infinite}"
-        "@keyframes c{0%,28%,100%{opacity:1}36%,92%{opacity:.5}}"
-        ".c0,.c1,.c2{animation:c 9s ease-in-out infinite}.c1{animation-delay:3s}.c2{animation-delay:6s}"
-    )
+            width = len(label) * 14 * 0.68
+            parts.append(f'<rect x="{x - width / 2 - 14:.1f}" y="236" width="9" height="9" fill="{colour}"/>')
+            parts.append(t(x + 2, 245, label, 13.5, colour, True, "middle", 0.08))
+            parts.append(t(x, 274, first, 19, LED_TEXT, anchor="middle"))
+            parts.append(t(x, 299, second, 19, LED_TEXT, anchor="middle"))
+    if not compact:
+        parts.append(f'<rect class="u" x="110" y="310" width="80" height="2" fill="{LED_AMBER}"/>')
+        base += ".u{opacity:0}"
+        anim += (
+            "@keyframes u{0%,33.3%{transform:translateX(0);opacity:1}33.4%,66.6%{transform:translateX(280px);opacity:1}"
+            "66.7%,100%{transform:translateX(560px);opacity:1}}.u{animation:u 9s linear infinite}"
+        )
     label = "Nguyen Nam Khanh, a.k.a. Cao Thanh Lam. Cybersecurity researcher: I break systems to see how they fail, I harden them and catch the drift, and I learn from data without reading it."
     comment = f"31337/tcp stage 2: {CTF_CIPHER}"
     return svg(w, h, "".join(parts), base, anim, label, comment, fixed=False)
