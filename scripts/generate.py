@@ -141,6 +141,28 @@ def typed(name, x, y, chars, size, bg, total, start, duration, end):
     return body, base, anim
 
 
+def shown_once(name, on, total):
+    """Hidden until `on`, then stays: terminal output does not vanish."""
+    a = on / total * 100
+    return (
+        f"@keyframes {name}{{0%,{a:.3f}%{{opacity:0}}{a + 0.02:.3f}%,100%{{opacity:1}}}}"
+        f".{name}{{animation:{name} {total}s linear 1 forwards}}"
+    )
+
+
+def typed_once(name, x, y, chars, size, bg, total, start, duration):
+    """Typewriter reveal that plays once and leaves the text on screen."""
+    body, base, _ = typed(name, x, y, chars, size, bg, total, start, duration, total)
+    length = chars * size * CW + 2
+    a, b = start / total * 100, (start + duration) / total * 100
+    anim = (
+        f"@keyframes {name}{{0%,{a:.3f}%{{transform:translateX(0);animation-timing-function:steps({chars},end)}}"
+        f"{b:.3f}%,100%{{transform:translateX({length:.1f}px)}}}}"
+        f".{name}{{animation:{name} {total}s linear 1 forwards}}"
+    )
+    return body, base, anim
+
+
 # ---------------------------------------------------------------- hero
 
 FONT5X7 = {
@@ -278,8 +300,8 @@ def command_line(index, x, y, command, size, total, start):
     prompt_x = x + 2 * size * CW
     duration = max(0.4, len(command) * 0.045)
     row = runs(x, y, [("$ ", ACCENT)], size) + t(prompt_x, y, command, size, TITLE)
-    cover, base, anim = typed(f"c{index}", prompt_x, y, len(command), size, PANEL, total, start + 0.2, duration, total - 1)
-    anim += shown(f"g{index}", start, total - 1, total)
+    cover, base, anim = typed_once(f"c{index}", prompt_x, y, len(command), size, PANEL, total, start + 0.2, duration)
+    anim += shown_once(f"g{index}", start, total)
     return f'<g class="g{index}">{row}</g>{cover}', base, anim, start + 0.2 + duration + 0.25
 
 
@@ -337,7 +359,7 @@ def session(compact, latest):
         ("ls ~/stack", stack_lines(compact)),
     ]
     per_line = 0.11
-    total = round(timeline_length(blocks, per_line) + 11)
+    total = round(timeline_length(blocks, per_line) + 1)
     top = 44
     y = top + 28 - line_h
     parts, base, anim, moment = [], "", "", 0.5
@@ -354,13 +376,13 @@ def session(compact, latest):
             moment += per_line
             if segments:
                 parts.append(runs(x, y, segments, size, f"l{index}"))
-                anim += shown(f"l{index}", moment, total - 1, total)
+                anim += shown_once(f"l{index}", moment, total)
                 index += 1
     y += line_h
     prompt_x = x + 2 * size * CW
     last = runs(x, y, [("$ ", ACCENT)], size) + f'<rect class="bl" x="{prompt_x:.1f}" y="{y - size + 2}" width="{size * CW:.1f}" height="{size + 2}" fill="{TEXT}"/>'
     parts.append(f'<g class="end">{last}</g>')
-    anim += shown("end", moment + 0.2, total - 1, total)
+    anim += shown_once("end", moment + 0.2, total)
     anim += "@keyframes bl{50%{opacity:0}}.bl{animation:bl 1s steps(1,end) infinite}"
     h = y + 22
     frame = [
@@ -381,7 +403,7 @@ def command_panel(command, lines, compact, label):
     w = 480 if compact else 860
     size, line_h, x = (13, 20, 20) if compact else (16, 23, 20)
     per_line = 0.15
-    total = round(timeline_length([(command, lines)], per_line) + 9)
+    total = round(timeline_length([(command, lines)], per_line) + 1)
     y = 32
     parts, base, anim, moment = [], "", "", 0.5
     row, base, anim, moment = command_line(0, x, y, command, size, total, moment)
@@ -391,7 +413,7 @@ def command_panel(command, lines, compact, label):
         moment += per_line
         if segments:
             parts.append(runs(x, y, segments, size, f"l{i}"))
-            anim += shown(f"l{i}", moment, total - 1, total)
+            anim += shown_once(f"l{i}", moment, total)
     h = y + 20
     frame = f'<rect x=".75" y=".75" width="{w - 1.5}" height="{h - 1.5}" rx="11" fill="{PANEL}" stroke="{BORDER}" stroke-width="1.5"/>'
     return svg(w, h, frame + "".join(parts), base, anim, label, fixed=False)
@@ -666,23 +688,31 @@ def activity(calendar, events, compact):
 
 # ---------------------------------------------------------------- sign-off
 
-def signoff():
-    w, h = 860, 92
-    total = 14
-    line = "tôi vẫn ở đây"
-    size = 20
-    x = (w - len(line) * size * CW) / 2
-    parts = [
-        t(w / 2, 32, "Connection to Khanh1916 closed.", 13, DIM, anchor="middle"),
-        t(x, 68, line, size, ACCENT, True),
-    ]
-    cover, base, anim = typed("say", x, 68, len(line), size, PANEL, total, 2.2, 1.8, 13.4)
-    parts.insert(0, f'<rect x=".75" y=".75" width="{w - 1.5}" height="{h - 1.5}" rx="11" fill="{PANEL}" stroke="{BORDER}" stroke-width="1.5"/>')
-    parts.append(cover)
-    cursor_x = x + len(line) * size * CW + 3
-    parts.append(f'<rect class="bl" x="{cursor_x:.1f}" y="52" width="11" height="20" fill="{ACCENT}"/>')
+SIGNOFF = "You can’t trust code that you did not totally create yourself."
+
+
+def signoff(compact):
+    w, size, width = (480, 16, 38) if compact else (860, 20, 80)
+    lines = textwrap.wrap(SIGNOFF, width)
+    total, line_h, first_y = 14, size + 8, 68
+    parts = [t(w / 2, 32, "Connection to Khanh1916 closed.", 13, DIM, anchor="middle")]
+    base, anim, start, y, x = "", "", 2.2, first_y, 0.0
+    for i, line in enumerate(lines):
+        y = first_y + i * line_h
+        x = (w - len(line) * size * CW) / 2
+        duration = len(line) * 0.05
+        parts.append(t(x, y, line, size, ACCENT, True))
+        cover, cover_base, cover_anim = typed(f"say{i}", x, y, len(line), size, PANEL, total, start, duration, 13.4)
+        parts.append(cover)
+        base += cover_base
+        anim += cover_anim
+        start += duration
+    h = y + 24
+    frame = f'<rect x=".75" y=".75" width="{w - 1.5}" height="{h - 1.5}" rx="11" fill="{PANEL}" stroke="{BORDER}" stroke-width="1.5"/>'
+    cursor_x = x + len(lines[-1]) * size * CW + 3
+    parts.append(f'<rect class="bl" x="{cursor_x:.1f}" y="{y - size * 0.8:.1f}" width="{size * 0.55:.1f}" height="{size}" fill="{ACCENT}"/>')
     anim += "@keyframes bl{50%{opacity:0}}.bl{animation:bl 1s steps(1,end) infinite}"
-    return svg(w, h, "".join(parts), base, anim, "Connection closed. Tôi vẫn ở đây: I am still here.", fixed=False)
+    return svg(w, h, frame + "".join(parts), base, anim, f"Connection to Khanh1916 closed. {SIGNOFF}", fixed=False)
 
 
 # ---------------------------------------------------------------- buttons
@@ -818,7 +848,8 @@ def main():
             f"activity-compact{suffix}.svg": activity(calendar, events, True),
             f"support{suffix}.svg": support_panel(False),
             f"support-compact{suffix}.svg": support_panel(True),
-            f"signoff{suffix}.svg": signoff(),
+            f"signoff{suffix}.svg": signoff(False),
+            f"signoff-compact{suffix}.svg": signoff(True),
             **{f"btn-{name}{suffix}.svg": button(*spec) for name, spec in BUTTONS.items()},
         })
         index = 0

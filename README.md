@@ -131,12 +131,14 @@ solved it? write to southkhanh@gmail.com, subject: 31337
 <p>
 <a href="https://github.com/Khanh1916#gh-light-mode-only">
 <picture>
-  <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/signoff-light.svg" width="100%" alt="Connection closed. Tôi vẫn ở đây: I am still here.">
+  <source media="(max-width: 600px)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/signoff-compact-light.svg">
+  <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/signoff-light.svg" width="100%" alt="Connection to Khanh1916 closed. You can’t trust code that you did not totally create yourself.">
 </picture>
 </a>
 <a href="https://github.com/Khanh1916#gh-dark-mode-only">
 <picture>
-  <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/signoff.svg" width="100%" alt="Connection closed. Tôi vẫn ở đây: I am still here.">
+  <source media="(max-width: 600px)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/signoff-compact.svg">
+  <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/signoff.svg" width="100%" alt="Connection to Khanh1916 closed. You can’t trust code that you did not totally create yourself.">
 </picture>
 </a>
 </p>
