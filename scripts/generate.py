@@ -37,16 +37,16 @@ CW = 0.6  # advance width of one character, in em
 
 THEMES = {
     "dark": {
-        "BG": "#13120f", "PANEL": "#0a0a09", "BORDER": "#2c2820", "LINE": "#3a352a", "LED_OFF": "#1e1c17",
-        "TEXT": "#eadcc0", "TITLE": "#f6ecd8", "GRID": "#d19200", "FLASH": "#ffe9b8", "SOFT": "#b3a78f",
-        "DIM": "#8a7f6b", "LED_SOFT": "#b89a5e", "RED": "#ff5468", "BLUE": "#46adff", "GREEN": "#3ddc97",
-        "AMBER": "#ffb000", "HEAT": ("#4d3a10", "#8a6410", "#d18f00", "#ffd166"),
+        "BG": "#121821", "PANEL": "#0b0f14", "BORDER": "#232c38", "LINE": "#2f3a48", "LED_OFF": "#18202b",
+        "TEXT": "#d5dde8", "TITLE": "#f2f6fb", "GRID": "#9fb0c6", "FLASH": "#ffffff", "SOFT": "#93a1b3",
+        "DIM": "#728196", "LED_SOFT": "#a3b1c4", "RED": "#ff5468", "BLUE": "#46adff", "GREEN": "#3ddc97",
+        "ACCENT": "#e6edf6", "HEAT": ("#26313f", "#4d5e73", "#8fa3ba", "#e6edf6"),
     },
     "light": {
-        "BG": "#ece3cf", "PANEL": "#f7f1e3", "BORDER": "#d8ccb2", "LINE": "#c9bb9c", "LED_OFF": "#e9dfc9",
-        "TEXT": "#2c2518", "TITLE": "#15110a", "GRID": "#b37a00", "FLASH": "#5a3a00", "SOFT": "#5f5442",
-        "DIM": "#75694f", "LED_SOFT": "#7a6238", "RED": "#c5301f", "BLUE": "#1c5fc4", "GREEN": "#127a4a",
-        "AMBER": "#9a5b00", "HEAT": ("#efcf8d", "#dca23a", "#ad7100", "#5f3f00"),
+        "BG": "#e7ebf1", "PANEL": "#f4f6f9", "BORDER": "#cfd6e0", "LINE": "#bcc6d3", "LED_OFF": "#e1e6ed",
+        "TEXT": "#1f2933", "TITLE": "#0e141b", "GRID": "#5b6b80", "FLASH": "#0e141b", "SOFT": "#4f5d6e",
+        "DIM": "#66748a", "LED_SOFT": "#5b6b80", "RED": "#c5301f", "BLUE": "#1c5fc4", "GREEN": "#127a4a",
+        "ACCENT": "#1f2a37", "HEAT": ("#c9d2de", "#8f9dae", "#4f5d6e", "#1f2a37"),
     },
 }
 
@@ -56,8 +56,8 @@ def apply_theme(name):
     palette = THEMES[name]
     globals().update(palette)
     globals().update(
-        LED_BLACK=palette["PANEL"], LED_AMBER=palette["AMBER"], LED_TEXT=palette["TEXT"],
-        COLOURS={"red": palette["RED"], "blue": palette["BLUE"], "green": palette["GREEN"], "amber": palette["AMBER"]},
+        LED_BLACK=palette["PANEL"], LED_ACCENT=palette["ACCENT"], LED_TEXT=palette["TEXT"],
+        COLOURS={"red": palette["RED"], "blue": palette["BLUE"], "green": palette["GREEN"], "accent": palette["ACCENT"]},
         LEVELS=dict(zip(("NONE", "FIRST_QUARTILE", "SECOND_QUARTILE", "THIRD_QUARTILE", "FOURTH_QUARTILE"),
                         (palette["LED_OFF"], *palette["HEAT"]))),
         HERO_COLUMNS=[
@@ -66,10 +66,10 @@ def apply_theme(name):
             ("GREEN / PRIVACY", palette["GREEN"], "I learn from data", "without reading it."),
         ],
         BUTTONS={
-            "email": ("EMAIL", "southkhanh@gmail.com", "mail", palette["AMBER"]),
+            "email": ("EMAIL", "southkhanh@gmail.com", "mail", palette["ACCENT"]),
             "facebook": ("FACEBOOK", "n72khanh", "f", palette["BLUE"]),
             "sponsor": ("SPONSOR", "github sponsors", "heart", palette["RED"]),
-            "kofi": ("KO-FI", "card or paypal", "cup", palette["AMBER"]),
+            "kofi": ("KO-FI", "card or paypal", "cup", palette["ACCENT"]),
             "momo": ("MOMO", "vietnam", "coin", palette["GREEN"]),
         },
     )
@@ -183,7 +183,7 @@ def led_board(x0, y0, pitch, dot, columns, rows, lines, total):
                 f"M{x0 + (start_column + position * 6 + c) * pitch:.1f} {y0 + (start_row + r) * pitch:.1f}h{dot}v{dot}h-{dot}z"
                 for r in range(7) for c in range(5) if glyph[r][c] == "1"
             )
-            board += f'<path class="k{index}" d="{squares}" fill="{LED_AMBER}"/>'
+            board += f'<path class="k{index}" d="{squares}" fill="{LED_ACCENT}"/>'
             anim += shown(f"k{index}", 0.3 + index * 0.1, total - 0.6, total)
             index += 1
     return board, anim
@@ -209,8 +209,8 @@ def led_wire(width, y, margin):
     for i in range(5):
         body += f'<rect class="ot o{i % 3}" x="{cx + 24}" y="{y - 2.5}" width="5" height="5" fill="{GREEN}" style="animation-delay:{-i * .6:.1f}s"/>'
     body += (
-        f'<path d="M{cx} {y - 22}l17 6v13c0 13-10 21-17 25c-7-4-17-12-17-25v-13z" fill="{LED_BLACK}" stroke="{LED_AMBER}" stroke-width="2.5"/>'
-        f'<path d="M{cx - 8} {y}l6 6l11-12" fill="none" stroke="{LED_AMBER}" stroke-width="2.5" stroke-linecap="square"/>'
+        f'<path d="M{cx} {y - 22}l17 6v13c0 13-10 21-17 25c-7-4-17-12-17-25v-13z" fill="{LED_BLACK}" stroke="{LED_ACCENT}" stroke-width="2.5"/>'
+        f'<path d="M{cx - 8} {y}l6 6l11-12" fill="none" stroke="{LED_ACCENT}" stroke-width="2.5" stroke-linecap="square"/>'
     )
     return body, ".pk,.ot{opacity:0}", anim
 
@@ -219,16 +219,16 @@ def hero(compact):
     total = 12
     if compact:
         w, h = 480, 452
-        board, anim = led_board(33.5, 50, 7, 5.6, 59, 17, [("NGUYEN NAM", 0, 1), ("KHANH", 15, 9)], total)
+        board, anim = led_board(44, 50, 7.4, 5.9, 53, 17, [("CAO THANH", 0, 1), ("LAM", 18, 9)], total)
         label_y, aka_y, wire_y = 34, 196, 238
     else:
         w, h = 860, 322
-        board, anim = led_board(31, 52, 8.4, 6.6, 95, 9, [("NGUYEN NAM KHANH", 0, 1)], total)
-        label_y, aka_y, wire_y = 36, 156, 192
+        board, anim = led_board(45, 50, 10, 8, 77, 9, [("CAO THANH LAM", 0, 1)], total)
+        label_y, aka_y, wire_y = 36, 160, 192
     cx = w / 2
     parts = [f'<rect x=".75" y=".75" width="{w - 1.5}" height="{h - 1.5}" rx="11" fill="{LED_BLACK}" stroke="{BORDER}" stroke-width="1.5"/>', board]
-    parts.append(t(cx, label_y, "CYBERSECURITY RESEARCHER", 13 if compact else 15, LED_AMBER, anchor="middle", track=0.12))
-    parts.append(t(cx, aka_y, "a.k.a. Cao Thanh Lam  /  @Khanh1916", 14 if compact else 16, LED_SOFT, anchor="middle"))
+    parts.append(t(cx, label_y, "CYBERSECURITY RESEARCHER", 13 if compact else 15, LED_ACCENT, anchor="middle", track=0.12))
+    parts.append(t(cx, aka_y, "a.k.a. Nguyen Nam Khanh  /  @Khanh1916", 14 if compact else 16, LED_SOFT, anchor="middle"))
     wire, base, wire_anim = led_wire(w, wire_y, 24 if compact else 36)
     parts.append(wire)
     anim += wire_anim
@@ -246,13 +246,13 @@ def hero(compact):
             parts.append(t(x, 274, first, 19, LED_TEXT, anchor="middle"))
             parts.append(t(x, 299, second, 19, LED_TEXT, anchor="middle"))
     if not compact:
-        parts.append(f'<rect class="u" x="110" y="310" width="80" height="2" fill="{LED_AMBER}"/>')
+        parts.append(f'<rect class="u" x="110" y="310" width="80" height="2" fill="{LED_ACCENT}"/>')
         base += ".u{opacity:0}"
         anim += (
             "@keyframes u{0%,33.3%{transform:translateX(0);opacity:1}33.4%,66.6%{transform:translateX(280px);opacity:1}"
             "66.7%,100%{transform:translateX(560px);opacity:1}}.u{animation:u 9s linear infinite}"
         )
-    label = "Nguyen Nam Khanh, a.k.a. Cao Thanh Lam. Cybersecurity researcher: I break systems to see how they fail, I harden them and catch the drift, and I learn from data without reading it."
+    label = "Cao Thanh Lam, a.k.a. Nguyen Nam Khanh. Cybersecurity researcher: I break systems to see how they fail, I harden them and catch the drift, and I learn from data without reading it."
     comment = f"31337/tcp stage 2: {CTF_CIPHER}"
     return svg(w, h, "".join(parts), base, anim, label, comment, fixed=False)
 
@@ -290,11 +290,11 @@ def terminal(compact, latest):
         output.append([(f"{'PORT':<11}{'STATE':<10}{'SERVICE':<13}VERSION", DIM)])
     for port, state, service, long_text, short_text in SERVICES:
         hidden = state != "open"
-        colour = AMBER if hidden else GREEN
+        colour = ACCENT if hidden else GREEN
         if compact:
-            output.append([(f"{port:<11}", LED_SOFT), (f"{service:<12}", colour), (short_text, AMBER if hidden else TEXT)])
+            output.append([(f"{port:<11}", LED_SOFT), (f"{service:<12}", colour), (short_text, ACCENT if hidden else TEXT)])
         else:
-            output.append([(f"{port:<11}", LED_SOFT), (f"{state:<10}", colour), (f"{service:<13}", TEXT), (long_text, AMBER if hidden else SOFT)])
+            output.append([(f"{port:<11}", LED_SOFT), (f"{state:<10}", colour), (f"{service:<13}", TEXT), (long_text, ACCENT if hidden else SOFT)])
     output += [
         [],
         [("Service Info: OS: Linux, Windows, Cisco IOS, Junos", SOFT)],
@@ -309,12 +309,12 @@ def terminal(compact, latest):
         f'<rect x=".75" y=".75" width="{w - 1.5}" height="{h - 1.5}" rx="11" fill="{PANEL}" stroke="{BORDER}" stroke-width="1.5"/>',
         f'<path d="M1 {top}H{w - 1}" stroke="{BORDER}" stroke-width="1.5"/>',
     ]
-    for i, colour in enumerate((RED, AMBER, GREEN)):
-        parts.append(f'<circle cx="{22 + i * 20}" cy="22" r="6" fill="{colour}"/>')
+    for i in range(3):
+        parts.append(f'<circle cx="{22 + i * 20}" cy="22" r="6" fill="{DIM}"/>')
     parts.append(t(w / 2, 27, "recon: Khanh1916", 13, DIM, anchor="middle"))
 
     prompt_x = x + len(prompt) * size * CW
-    parts.append(runs(x, first_y, [(prompt, AMBER)], size))
+    parts.append(runs(x, first_y, [(prompt, ACCENT)], size))
     parts.append(t(prompt_x, first_y, command, size, TITLE))
     cover, base, anim = typed("cmd", prompt_x, first_y, len(command), size, PANEL, total, 0.5, 1.7, 23)
     parts.append(cover)
@@ -338,7 +338,7 @@ def terminal(compact, latest):
             anim += shown(f"l{i}", moment, 23, total)
             moment += 0.2
     y += line_h
-    prompt_group = t(x, y, prompt, size, AMBER) + (
+    prompt_group = t(x, y, prompt, size, ACCENT) + (
         f'<rect class="bl" x="{prompt_x:.1f}" y="{y - size + 2}" width="{cursor_w:.1f}" height="{size + 2}" fill="{TEXT}"/>'
     )
     parts.append(f'<g class="end">{prompt_group}</g>')
@@ -387,7 +387,7 @@ def card(index, repo, tag, colour, body, base, anim):
         t(20, 66, name, 23, TITLE, True),
     ]
     if stars:
-        parts.append(t(20 + len(name) * 23 * CW + 12, 66, f"★ {stars}", 14, AMBER))
+        parts.append(t(20 + len(name) * 23 * CW + 12, 66, f"★ {stars}", 14, ACCENT))
     for i, line in enumerate(lines):
         parts.append(t(20, 90 + i * 19, line, 13.5, SOFT))
     parts.append(f'<g transform="translate(0,19)">{body}</g>')
@@ -469,7 +469,7 @@ def anim_federated(repo):
         "@keyframes nz{0%,100%{opacity:1}50%{opacity:.35}}.nz{animation:nz 1.6s ease-in-out infinite}"
         "@keyframes fl{to{stroke-dashoffset:-14}}.fl{animation:fl .7s linear infinite}"
     )
-    body = t(20, 122, "+ ε noise", 11, GREEN) + t(110, 122, "masked", 10.5, AMBER, anchor="middle")
+    body = t(20, 122, "+ ε noise", 11, GREEN) + t(110, 122, "masked", 10.5, ACCENT, anchor="middle")
     for gateway in range(5):
         y = 128 + gateway * 13
         hot = rng.sample(range(4), 2)  # non-IID: each gateway sees only some classes
@@ -490,7 +490,7 @@ def anim_federated(repo):
             f".mv{gateway}{{animation:mv{gateway} 2.4s linear infinite}}"
         )
         for offset in (0, 1.2):
-            body += f'<rect class="mv mv{gateway}" x="70" y="{y + 3}" width="9" height="4" rx="1" fill="{AMBER}" style="animation-delay:{-(gateway * 0.4 + offset):.2f}s"/>'
+            body += f'<rect class="mv mv{gateway}" x="70" y="{y + 3}" width="9" height="4" rx="1" fill="{ACCENT}" style="animation-delay:{-(gateway * 0.4 + offset):.2f}s"/>'
 
     body += f'<rect x="{box_x}" y="141" width="{box_w}" height="36" rx="6" fill="{GREEN}" fill-opacity=".14" stroke="{GREEN}"/>'
     body += t(box_x + box_w / 2, 164, "SecAgg+", 13, TITLE, True, "middle")
@@ -505,9 +505,9 @@ def anim_federated(repo):
         body += f'<g class="sy{row}">{cells}</g>'
         anim += shown(f"sy{row}", 0.6 + row * 0.5, 5.6, total)
 
-    body += f'<path class="fl" d="M297 {mid}h29" stroke="{AMBER}" stroke-width="1.5" stroke-dasharray="3 4"/>'
+    body += f'<path class="fl" d="M297 {mid}h29" stroke="{ACCENT}" stroke-width="1.5" stroke-dasharray="3 4"/>'
     body += f'<rect x="328" y="143" width="52" height="32" rx="6" fill="{BG}" stroke="{BORDER}"/>'
-    body += f'<g class="ids"><rect x="328" y="143" width="52" height="32" rx="6" fill="{AMBER}" fill-opacity=".22" stroke="{AMBER}"/></g>'
+    body += f'<g class="ids"><rect x="328" y="143" width="52" height="32" rx="6" fill="{ACCENT}" fill-opacity=".22" stroke="{ACCENT}"/></g>'
     body += t(354, 164, "IDS", 13, TITLE, True, "middle")
     anim += shown("ids", 3.2, 5.6, total)
 
@@ -534,8 +534,8 @@ def anim_lunar(repo):
     body += f'<g class="vn">{t(30, 176, "Vietnam  (UTC+7)", 12, SOFT)}{t(30, 200, "02/02/2030", 22, GREEN, True)}</g>'
     anim += shown("vn", 3.6, 8.6, total)
     body += t(380, 157, "Tết 2030", 15, TITLE, True, "end")
-    body += t(380, 178, "23:09 in Hanoi", 12, AMBER, anchor="end")
-    body += t(380, 195, "00:09 in Beijing", 12, AMBER, anchor="end")
+    body += t(380, 178, "23:09 in Hanoi", 12, ACCENT, anchor="end")
+    body += t(380, 195, "00:09 in Beijing", 12, ACCENT, anchor="end")
     return body, base, anim
 
 
@@ -562,9 +562,9 @@ def activity(calendar):
     grid_w = len(weeks) * (cell + gap) - gap
     parts = [
         f'<rect x=".75" y=".75" width="{w - 1.5}" height="{h - 1.5}" rx="11" fill="{PANEL}" stroke="{BORDER}" stroke-width="1.5"/>',
-        runs(32, 36, [("$ ", AMBER), ("tcpdump -i github -n host Khanh1916", TITLE)], 15),
-        runs(32, 63, [(f"{total}", AMBER), (" packets   ", SOFT), (f"{active}", AMBER), (" active days   ", SOFT),
-                      (f"{best}", AMBER), (" day longest burst   ", SOFT), (f"{peak}", AMBER), (" peak/day", SOFT)], 14),
+        runs(32, 36, [("$ ", ACCENT), ("tcpdump -i github -n host Khanh1916", TITLE)], 15),
+        runs(32, 63, [(f"{total}", ACCENT), (" packets   ", SOFT), (f"{active}", ACCENT), (" active days   ", SOFT),
+                      (f"{best}", ACCENT), (" day longest burst   ", SOFT), (f"{peak}", ACCENT), (" peak/day", SOFT)], 14),
     ]
     for column, week in enumerate(weeks):
         delay = column / len(weeks) * duration
@@ -596,13 +596,13 @@ def signoff():
     x = (w - len(line) * size * CW) / 2
     parts = [
         t(w / 2, 32, "Connection to Khanh1916 closed.", 13, DIM, anchor="middle"),
-        t(x, 68, line, size, AMBER, True),
+        t(x, 68, line, size, ACCENT, True),
     ]
     cover, base, anim = typed("say", x, 68, len(line), size, PANEL, total, 2.2, 1.8, 13.4)
     parts.insert(0, f'<rect x=".75" y=".75" width="{w - 1.5}" height="{h - 1.5}" rx="11" fill="{PANEL}" stroke="{BORDER}" stroke-width="1.5"/>')
     parts.append(cover)
     cursor_x = x + len(line) * size * CW + 3
-    parts.append(f'<rect class="bl" x="{cursor_x:.1f}" y="52" width="11" height="20" fill="{AMBER}"/>')
+    parts.append(f'<rect class="bl" x="{cursor_x:.1f}" y="52" width="11" height="20" fill="{ACCENT}"/>')
     anim += "@keyframes bl{50%{opacity:0}}.bl{animation:bl 1s steps(1,end) infinite}"
     return svg(w, h, "".join(parts), base, anim, "Connection closed. Tôi vẫn ở đây: I am still here.", fixed=False)
 
@@ -666,10 +666,10 @@ def stack_panel(compact):
         parts.append(f'<rect x="{x}" y="{top}" width="{module_w}" height="{module_h}" rx="5" fill="{BG}" stroke="{BORDER}"/>')
         cols = len(code) * 6 - 1
         path = dot_word(x + (module_w - cols * 4) / 2, top + 12, 4, 3.2, code)
-        parts.append(f'<path class="m{index}" d="{path}" fill="{LED_AMBER}"/>')
+        parts.append(f'<path class="m{index}" d="{path}" fill="{LED_ACCENT}"/>')
         anim += shown(f"m{index}", 0.2 + index * 0.13, total - 0.6, total)
         parts.append(t(x + module_w / 2, top + 60, name, 12, LED_TEXT, anchor="middle"))
-        colour = rng.choice((GREEN, GREEN, LED_AMBER))
+        colour = rng.choice((GREEN, GREEN, LED_ACCENT))
         parts.append(f'<rect class="l{index}" x="{x + module_w - 13}" y="{top + 7}" width="6" height="6" fill="{colour}"/>')
         anim += f".l{index}{{animation:bl {rng.uniform(0.5, 2.2):.2f}s steps(1,end) infinite}}"
     names = ", ".join(name for _, items in STACK for _, name in items)
@@ -691,7 +691,7 @@ def button(index, word, note, icon, colour):
     )
     for position, letter in enumerate(word):
         path = dot_path(x0 + position * 6 * 2.7, 13, 2.7, 2.2, FONT5X7[letter].split())
-        parts.append(f'<path class="k{position}" d="{path}" fill="{LED_AMBER}"/>')
+        parts.append(f'<path class="k{position}" d="{path}" fill="{LED_ACCENT}"/>')
         anim += shown(f"k{position}", 0.25 + position * 0.09, total - 0.5, total)
     return svg(w, h, "".join(parts), "", anim, f"{word}: {note}")
 

@@ -3,13 +3,13 @@
 <a href="https://github.com/Khanh1916#gh-light-mode-only">
   <picture>
     <source media="(max-width: 600px)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/hero-compact-light.svg">
-    <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/hero-light.svg" width="100%" alt="Nguyen Nam Khanh, a.k.a. Cao Thanh Lam. Cybersecurity researcher: I break systems to see how they fail, I harden them and catch the drift, and I learn from data without reading it.">
+    <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/hero-light.svg" width="100%" alt="Cao Thanh Lam, a.k.a. Nguyen Nam Khanh. Cybersecurity researcher: I break systems to see how they fail, I harden them and catch the drift, and I learn from data without reading it.">
   </picture>
 </a>
 <a href="https://github.com/Khanh1916#gh-dark-mode-only">
   <picture>
     <source media="(max-width: 600px)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/hero-compact.svg">
-    <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/hero.svg" width="100%" alt="Nguyen Nam Khanh, a.k.a. Cao Thanh Lam. Cybersecurity researcher: I break systems to see how they fail, I harden them and catch the drift, and I learn from data without reading it.">
+    <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/hero.svg" width="100%" alt="Cao Thanh Lam, a.k.a. Nguyen Nam Khanh. Cybersecurity researcher: I break systems to see how they fail, I harden them and catch the drift, and I learn from data without reading it.">
   </picture>
 </a>
 
