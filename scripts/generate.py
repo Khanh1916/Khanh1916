@@ -309,8 +309,8 @@ def terminal(compact, latest):
         f'<rect x=".75" y=".75" width="{w - 1.5}" height="{h - 1.5}" rx="11" fill="{PANEL}" stroke="{BORDER}" stroke-width="1.5"/>',
         f'<path d="M1 {top}H{w - 1}" stroke="{BORDER}" stroke-width="1.5"/>',
     ]
-    for i in range(3):
-        parts.append(f'<circle cx="{22 + i * 20}" cy="22" r="6" fill="{DIM}"/>')
+    for i, colour in enumerate(("#ff5f57", "#febc2e", "#28c840")):  # macOS window controls
+        parts.append(f'<circle cx="{22 + i * 20}" cy="22" r="6" fill="{colour}"/>')
     parts.append(t(w / 2, 27, "recon: Khanh1916", 13, DIM, anchor="middle"))
 
     prompt_x = x + len(prompt) * size * CW
@@ -669,7 +669,7 @@ def stack_panel(compact):
         parts.append(f'<path class="m{index}" d="{path}" fill="{LED_ACCENT}"/>')
         anim += shown(f"m{index}", 0.2 + index * 0.13, total - 0.6, total)
         parts.append(t(x + module_w / 2, top + 60, name, 12, LED_TEXT, anchor="middle"))
-        colour = rng.choice((GREEN, GREEN, LED_ACCENT))
+        colour = GREEN
         parts.append(f'<rect class="l{index}" x="{x + module_w - 13}" y="{top + 7}" width="6" height="6" fill="{colour}"/>')
         anim += f".l{index}{{animation:bl {rng.uniform(0.5, 2.2):.2f}s steps(1,end) infinite}}"
     names = ", ".join(name for _, items in STACK for _, name in items)
