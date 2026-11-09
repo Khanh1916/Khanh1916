@@ -11,6 +11,7 @@ All text uses textLength, so columns line up whichever monospace font the
 viewer's system falls back to. Animations sit behind prefers-reduced-motion,
 and every element's resting state is its finished state.
 """
+import datetime
 import html
 import json
 import os
@@ -65,13 +66,6 @@ def apply_theme(name):
             ("BLUE / DEFENSE", palette["BLUE"], "I harden them", "and catch the drift."),
             ("GREEN / PRIVACY", palette["GREEN"], "I learn from data", "without reading it."),
         ],
-        BUTTONS={
-            "email": ("EMAIL", "southkhanh@gmail.com", "mail", palette["ACCENT"]),
-            "facebook": ("FACEBOOK", "n72khanh", "f", palette["BLUE"]),
-            "sponsor": ("SPONSOR", "github sponsors", "heart", palette["RED"]),
-            "kofi": ("KO-FI", "card or paypal", "cup", palette["ACCENT"]),
-            "momo": ("MOMO", "vietnam", "coin", palette["GREEN"]),
-        },
     )
 
 
@@ -272,82 +266,155 @@ SERVICES = [
 ]
 
 
-def terminal(compact, latest):
-    w = 480 if compact else 860
-    size, line_h = (13, 20) if compact else (16, 24)
-    x = 20
-    open_count = sum(1 for s in SERVICES if s[1] == "open")
-    prompt = "visitor@github:~$ "
-    command = "nmap -sV github.com/Khanh1916"
-    output = [
-        [("Starting Nmap against Nguyen Nam Khanh", SOFT)],
-        [(f"Host is up. Latest push: {latest}", SOFT)],
-        [],
+PLAN = (
+    "I attack systems to learn how they fail, then build the tools that stop it happening again. "
+    "Lately I've been stuck on a harder question: how do you train an intrusion detector on traffic "
+    "nobody is allowed to see?"
+)
+
+
+def command_line(index, x, y, command, size, total, start):
+    """A prompt and a command that types itself. Returns (svg, base css, animation css, finished at)."""
+    prompt_x = x + 2 * size * CW
+    duration = max(0.4, len(command) * 0.045)
+    row = runs(x, y, [("$ ", ACCENT)], size) + t(prompt_x, y, command, size, TITLE)
+    cover, base, anim = typed(f"c{index}", prompt_x, y, len(command), size, PANEL, total, start + 0.2, duration, total - 1)
+    anim += shown(f"g{index}", start, total - 1, total)
+    return f'<g class="g{index}">{row}</g>{cover}', base, anim, start + 0.2 + duration + 0.25
+
+
+def timeline_length(blocks, per_line):
+    moment = 0.5
+    for command, lines in blocks:
+        moment += 0.2 + max(0.4, len(command) * 0.045) + 0.25 + len(lines) * per_line
+    return moment
+
+
+def stack_lines(compact):
+    dirs = [
+        ("languages/", "go python bash powershell php sql" if compact else "go  python  bash  powershell  php  sql"),
+        ("infra/", "linux docker kubernetes gh-actions" if compact else "linux  docker  kubernetes  github-actions"),
+        ("data/", "mysql oracle" if compact else "mysql  oracle"),
     ]
+    rows = [[(f"{name:<12}", LED_SOFT), (items, TEXT)] for name, items in dirs]
     if compact:
-        output.append([(f"{'PORT':<11}{'SERVICE':<12}STACK", DIM)])
+        rows += [[(f"{'ml/':<12}", LED_SOFT), ("pytorch flower opacus scikit-learn", TEXT)], [(" " * 12 + "pandas numpy", TEXT)]]
     else:
-        output.append([(f"{'PORT':<11}{'STATE':<10}{'SERVICE':<13}VERSION", DIM)])
+        rows += [[(f"{'ml/':<12}", LED_SOFT), ("pytorch  flower  opacus  scikit-learn  pandas  numpy", TEXT)]]
+    return rows
+
+
+def session(compact, latest):
+    """whoami, id, .plan, nmap and ls as one terminal window."""
+    w = 480 if compact else 860
+    size, line_h, x = (13, 20, 20) if compact else (16, 23, 20)
+    wrap = int((w - 2 * x) / (size * CW))
+    open_count = sum(1 for s in SERVICES if s[1] == "open")
+    if compact:
+        table = [[(f"{'PORT':<11}{'SERVICE':<12}STACK", DIM)]]
+    else:
+        table = [[(f"{'PORT':<11}{'STATE':<10}{'SERVICE':<13}VERSION", DIM)]]
     for port, state, service, long_text, short_text in SERVICES:
         hidden = state != "open"
         colour = ACCENT if hidden else GREEN
         if compact:
-            output.append([(f"{port:<11}", LED_SOFT), (f"{service:<12}", colour), (short_text, ACCENT if hidden else TEXT)])
+            table.append([(f"{port:<11}", LED_SOFT), (f"{service:<12}", colour), (short_text, ACCENT if hidden else TEXT)])
         else:
-            output.append([(f"{port:<11}", LED_SOFT), (f"{state:<10}", colour), (f"{service:<13}", TEXT), (long_text, ACCENT if hidden else SOFT)])
-    output += [
-        [],
-        [("Service Info: OS: Linux, Windows, Cisco IOS, Junos", SOFT)],
-        [(f"Nmap done: 1 human scanned, {open_count} services open", SOFT)],
+            table.append([(f"{port:<11}", LED_SOFT), (f"{state:<10}", colour), (f"{service:<13}", TEXT), (long_text, ACCENT if hidden else SOFT)])
+    blocks = [
+        ("whoami", [[("cao-thanh-lam", TEXT)]]),
+        ("id", [[("uid=1916(cao-thanh-lam) groups=red,blue,privacy", TEXT)]]),
+        ("cat ~/.plan", [[(line, TEXT)] for line in textwrap.wrap(PLAN, wrap)] + [[], [("contact: southkhanh@gmail.com", TEXT)], [], [("# You're the pentester now.", DIM)]]),
+        ("nmap -sV github.com/Khanh1916", [
+            [("Starting Nmap against Cao Thanh Lam", SOFT)],
+            [(f"Host is up. Latest push: {latest}", SOFT)],
+            [],
+            *table,
+            [],
+            [("Service Info: OS: Linux, Windows, Cisco IOS, Junos", SOFT)],
+            [(f"Nmap done: 1 human scanned, {open_count} services open", SOFT)],
+        ]),
+        ("ls ~/stack", stack_lines(compact)),
     ]
-
+    per_line = 0.11
+    total = round(timeline_length(blocks, per_line) + 11)
     top = 44
-    first_y = top + 28
-    h = first_y + (len(output) + 1) * line_h + 18
-    total = 24
-    parts = [
+    y = top + 28 - line_h
+    parts, base, anim, moment = [], "", "", 0.5
+    index = 0
+    for command, lines in blocks:
+        y += line_h
+        row, row_base, row_anim, moment = command_line(index, x, y, command, size, total, moment)
+        parts.append(row)
+        base += row_base
+        anim += row_anim
+        index += 1
+        for segments in lines:
+            y += line_h
+            moment += per_line
+            if segments:
+                parts.append(runs(x, y, segments, size, f"l{index}"))
+                anim += shown(f"l{index}", moment, total - 1, total)
+                index += 1
+    y += line_h
+    prompt_x = x + 2 * size * CW
+    last = runs(x, y, [("$ ", ACCENT)], size) + f'<rect class="bl" x="{prompt_x:.1f}" y="{y - size + 2}" width="{size * CW:.1f}" height="{size + 2}" fill="{TEXT}"/>'
+    parts.append(f'<g class="end">{last}</g>')
+    anim += shown("end", moment + 0.2, total - 1, total)
+    anim += "@keyframes bl{50%{opacity:0}}.bl{animation:bl 1s steps(1,end) infinite}"
+    h = y + 22
+    frame = [
         f'<rect x=".75" y=".75" width="{w - 1.5}" height="{h - 1.5}" rx="11" fill="{PANEL}" stroke="{BORDER}" stroke-width="1.5"/>',
         f'<path d="M1 {top}H{w - 1}" stroke="{BORDER}" stroke-width="1.5"/>',
     ]
     for i, colour in enumerate(("#ff5f57", "#febc2e", "#28c840")):  # macOS window controls
-        parts.append(f'<circle cx="{22 + i * 20}" cy="22" r="6" fill="{colour}"/>')
-    parts.append(t(w / 2, 27, "recon: Khanh1916", 13, DIM, anchor="middle"))
+        frame.append(f'<circle cx="{22 + i * 20}" cy="22" r="6" fill="{colour}"/>')
+    frame.append(t(w / 2, 27, "session: Khanh1916", 13, DIM, anchor="middle"))
+    services = ", ".join(s[2] for s in SERVICES if s[1] == "open")
+    names = "go, python, bash, powershell, php, sql, linux, docker, kubernetes, github-actions, mysql, oracle, pytorch, flower, opacus, scikit-learn, pandas, numpy"
+    label = f"A terminal session. whoami prints cao-thanh-lam. {PLAN} Contact: southkhanh@gmail.com. An nmap scan shows open services: {services}; port 31337 is filtered and marked flag. The stack directory lists {names}."
+    return svg(w, h, "".join(frame + parts), base, anim, label, fixed=False)
 
-    prompt_x = x + len(prompt) * size * CW
-    parts.append(runs(x, first_y, [(prompt, ACCENT)], size))
-    parts.append(t(prompt_x, first_y, command, size, TITLE))
-    cover, base, anim = typed("cmd", prompt_x, first_y, len(command), size, PANEL, total, 0.5, 1.7, 23)
-    parts.append(cover)
 
-    step = len(command) * size * CW
-    cursor_w = size * CW
-    parts.append(f'<rect class="cu" x="{prompt_x:.1f}" y="{first_y - size + 2}" width="{cursor_w:.1f}" height="{size + 2}" fill="{TEXT}"/>')
-    base += ".cu{opacity:0}"
-    a, b = 0.5 / total * 100, 2.2 / total * 100
-    anim += (
-        f"@keyframes cu{{0%,{a:.3f}%{{opacity:1;transform:translateX(0);animation-timing-function:steps({len(command)},end)}}"
-        f"{b:.3f}%{{opacity:1;transform:translateX({step:.1f}px)}}{b + 0.02:.3f}%,100%{{opacity:0;transform:translateX({step:.1f}px)}}}}"
-        f".cu{{animation:cu {total}s linear infinite}}"
-    )
-
-    y, moment = first_y, 2.7
-    for i, segments in enumerate(output):
+def command_panel(command, lines, compact, label):
+    """A single command and its output, framed like every other panel."""
+    w = 480 if compact else 860
+    size, line_h, x = (13, 20, 20) if compact else (16, 23, 20)
+    per_line = 0.15
+    total = round(timeline_length([(command, lines)], per_line) + 9)
+    y = 32
+    parts, base, anim, moment = [], "", "", 0.5
+    row, base, anim, moment = command_line(0, x, y, command, size, total, moment)
+    parts.append(row)
+    for i, segments in enumerate(lines):
         y += line_h
+        moment += per_line
         if segments:
             parts.append(runs(x, y, segments, size, f"l{i}"))
-            anim += shown(f"l{i}", moment, 23, total)
-            moment += 0.2
-    y += line_h
-    prompt_group = t(x, y, prompt, size, ACCENT) + (
-        f'<rect class="bl" x="{prompt_x:.1f}" y="{y - size + 2}" width="{cursor_w:.1f}" height="{size + 2}" fill="{TEXT}"/>'
-    )
-    parts.append(f'<g class="end">{prompt_group}</g>')
-    anim += shown("end", moment, 23, total)
-    anim += "@keyframes bl{50%{opacity:0}}.bl{animation:bl 1s steps(1,end) infinite}"
+            anim += shown(f"l{i}", moment, total - 1, total)
+    h = y + 20
+    frame = f'<rect x=".75" y=".75" width="{w - 1.5}" height="{h - 1.5}" rx="11" fill="{PANEL}" stroke="{BORDER}" stroke-width="1.5"/>'
+    return svg(w, h, frame + "".join(parts), base, anim, label, fixed=False)
 
-    open_list = ", ".join(s[2] for s in SERVICES if s[1] == "open")
-    label = f"An animated nmap scan of this profile. Open services map to skills: {open_list}. Port 31337 is filtered and marked flag."
-    return svg(w, h, "".join(parts), base, anim, label, fixed=False)
+
+def nuclei_panel(compact, matches):
+    return command_panel(
+        "nuclei -u github.com/Khanh1916 -severity all",
+        [[("[INF] ", LED_SOFT), (f"Scan completed. {matches} matches found.", TEXT)]],
+        compact, f"nuclei scan of the profile: {matches} matches found, shown as the project cards below.",
+    )
+
+
+def support_panel(compact):
+    width = 56 if compact else 85
+    text = [
+        "If my labs or tools helped you learn or build something, you can support me.",
+        "Thank you!",
+        "International: GitHub Sponsors preferred. Ko-fi for card or PayPal, no GitHub needed.",
+        "Vietnam: MoMo preferred.",
+    ]
+    lines = [[(line, TEXT)] for paragraph in text for line in textwrap.wrap(paragraph, width)]
+    return command_panel("./support", lines, compact, " ".join(text))
 
 
 # ---------------------------------------------------------------- finding cards
@@ -546,10 +613,11 @@ ANIMATIONS = {"oracle": anim_oracle, "secbaseline": anim_secbaseline, "federated
 
 
 
-def activity(calendar):
+def activity(calendar, events, compact):
+    """Recent public GitHub events as tcpdump lines, then the year as a capture map."""
+    w, margin, size, line_h = (480, 20, 13, 20) if compact else (860, 32, 15, 22)
+    chars = int((w - 2 * margin) / (size * CW))
     weeks = calendar["weeks"]
-    w, h = 860, 216
-    cell, gap, x0, y0 = 12, 3, 32, 84
     days = [day for week in weeks for day in week["contributionDays"]]
     total = calendar["totalContributions"]
     active = sum(1 for d in days if d["contributionCount"])
@@ -558,32 +626,42 @@ def activity(calendar):
     for d in days:
         run = run + 1 if d["contributionCount"] else 0
         best = max(best, run)
+    parts = [runs(margin, 34, [("$ ", ACCENT), ("tcpdump -i github -n host Khanh1916", TITLE)], size)]
+    y = 34
+    rows = events or ["(no public packets captured)"]
+    for event in rows:
+        y += line_h
+        text = event[6:] if compact and events else event
+        clipped = text if len(text) <= chars else text[:chars - 1] + "…"
+        parts.append(t(margin, y, clipped, size, SOFT))
+    y += line_h + 8
+    burst = "day burst" if compact else "day longest burst"
+    parts.append(runs(margin, y, [(f"{total}", ACCENT), (" packets  ", SOFT), (f"{active}", ACCENT), (" active days  ", SOFT),
+                                  (f"{best}", ACCENT), (f" {burst}  ", SOFT), (f"{peak}", ACCENT), (" peak", SOFT)], size - 1))
+    pitch = (w - 2 * margin) / len(weeks)
+    cell = round(pitch * 0.8, 2)
+    y0 = y + 16
     duration = 9
-    grid_w = len(weeks) * (cell + gap) - gap
-    parts = [
-        f'<rect x=".75" y=".75" width="{w - 1.5}" height="{h - 1.5}" rx="11" fill="{PANEL}" stroke="{BORDER}" stroke-width="1.5"/>',
-        runs(32, 36, [("$ ", ACCENT), ("tcpdump -i github -n host Khanh1916", TITLE)], 15),
-        runs(32, 63, [(f"{total}", ACCENT), (" packets   ", SOFT), (f"{active}", ACCENT), (" active days   ", SOFT),
-                      (f"{best}", ACCENT), (" day longest burst   ", SOFT), (f"{peak}", ACCENT), (" peak/day", SOFT)], 14),
-    ]
     for column, week in enumerate(weeks):
         delay = column / len(weeks) * duration
+        x = margin + column * pitch
         for day in week["contributionDays"]:
-            x = x0 + column * (cell + gap)
-            y = y0 + day["weekday"] * (cell + gap)
-            parts.append(f'<rect x="{x}" y="{y}" width="{cell}" height="{cell}" rx="2" fill="{LEVELS[day["contributionLevel"]]}"/>')
+            cy = y0 + day["weekday"] * pitch
+            parts.append(f'<rect x="{x:.2f}" y="{cy:.2f}" width="{cell}" height="{cell}" rx="1.5" fill="{LEVELS[day["contributionLevel"]]}"/>')
             if day["contributionCount"]:
-                parts.append(f'<rect class="f" x="{x}" y="{y}" width="{cell}" height="{cell}" rx="2" fill="{FLASH}" style="animation-delay:{delay:.2f}s"/>')
-    beam_h = 7 * (cell + gap) + 6
-    parts.append(f'<rect class="bm" x="{x0 - 3}" y="{y0 - 6}" width="3" height="{beam_h}" fill="{FLASH}"/>')
+                parts.append(f'<rect class="f" x="{x:.2f}" y="{cy:.2f}" width="{cell}" height="{cell}" rx="1.5" fill="{FLASH}" style="animation-delay:{delay:.2f}s"/>')
+    grid_h = 7 * pitch
+    parts.append(f'<rect class="bm" x="{margin - 3}" y="{y0 - 4:.1f}" width="2.5" height="{grid_h + 6:.1f}" fill="{FLASH}"/>')
+    h = int(y0 + grid_h + 18)
+    frame = f'<rect x=".75" y=".75" width="{w - 1.5}" height="{h - 1.5}" rx="11" fill="{PANEL}" stroke="{BORDER}" stroke-width="1.5"/>'
     base = ".f,.bm{opacity:0}"
     anim = (
         f"@keyframes f{{0%{{opacity:.92}}7%,100%{{opacity:0}}}}.f{{animation:f {duration}s linear infinite}}"
-        f"@keyframes bm{{0%{{transform:translateX(0);opacity:.9}}99%{{opacity:.9}}100%{{transform:translateX({grid_w}px);opacity:0}}}}"
+        f"@keyframes bm{{0%{{transform:translateX(0);opacity:.9}}99%{{opacity:.9}}100%{{transform:translateX({w - 2 * margin}px);opacity:0}}}}"
         f".bm{{animation:bm {duration}s linear infinite}}"
     )
-    label = f"Contribution calendar drawn as a packet capture: {total} contributions, {active} active days, longest run of {best} days, peak of {peak} in a day."
-    return svg(w, h, "".join(parts), base, anim, label, fixed=False)
+    label = f"tcpdump output of recent public GitHub events, then a contribution map: {total} contributions, {active} active days, longest run of {best} days, peak of {peak} in a day."
+    return svg(w, h, frame + "".join(parts), base, anim, label, fixed=False)
 
 
 # ---------------------------------------------------------------- sign-off
@@ -607,93 +685,39 @@ def signoff():
     return svg(w, h, "".join(parts), base, anim, "Connection closed. Tôi vẫn ở đây: I am still here.", fixed=False)
 
 
-# ---------------------------------------------------------------- stack rack and buttons
+# ---------------------------------------------------------------- buttons
 
-STACK = [
-    ("LANGUAGES", [("GO", "Go"), ("PY", "Python"), ("SH", "Bash"), ("PS", "PowerShell"), ("PHP", "PHP"), ("SQL", "SQL")]),
-    ("INFRA", [("LNX", "Linux"), ("DKR", "Docker"), ("K8S", "Kubernetes"), ("GHA", "GitHub Actions")]),
-    ("DATA", [("MY", "MySQL"), ("ORA", "Oracle")]),
-    ("MACHINE LEARNING", [("TCH", "PyTorch"), ("FLW", "Flower"), ("OPA", "Opacus"), ("SKL", "scikit-learn"), ("PD", "pandas"), ("NP", "NumPy")]),
-]
-ICONS = {
-    "heart": "0110110 1111111 1111111 1111111 0111110 0011100 0001000",
-    "mail": "1111111 1100011 1010101 1001001 1000001 1000001 1111111",
-    "cup": "0101000 0010100 0000000 1111110 1111101 1111110 0111100",
-    "f": "0001110 0010000 0010000 0111110 0010000 0010000 0010000",
-    "coin": "0011100 0100010 1001001 1010101 1001001 0100010 0011100",
+# Brand glyphs from Simple Icons (CC0), on a 24x24 grid. MoMo is not in the set.
+BRAND_ICONS = {
+    "mail": "M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z",
+    "facebook": "M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z",
+    "sponsors": "M17.625 1.499c-2.32 0-4.354 1.203-5.625 3.03-1.271-1.827-3.305-3.03-5.625-3.03C3.129 1.499 0 4.253 0 8.249c0 4.275 3.068 7.847 5.828 10.227a33.14 33.14 0 0 0 5.616 3.876l.028.017.008.003-.001.003c.163.085.342.126.521.125.179.001.358-.041.521-.125l-.001-.003.008-.003.028-.017a33.14 33.14 0 0 0 5.616-3.876C20.932 16.096 24 12.524 24 8.249c0-3.996-3.129-6.75-6.375-6.75zm-.919 15.275a30.766 30.766 0 0 1-4.703 3.316l-.004-.002-.004.002a30.955 30.955 0 0 1-4.703-3.316c-2.677-2.307-5.047-5.298-5.047-8.523 0-2.754 2.121-4.5 4.125-4.5 2.06 0 3.914 1.479 4.544 3.684.143.495.596.797 1.086.796.49.001.943-.302 1.085-.796.63-2.205 2.484-3.684 4.544-3.684 2.004 0 4.125 1.746 4.125 4.5 0 3.225-2.37 6.216-5.048 8.523z",
+    "kofi": "M11.351 2.715c-2.7 0-4.986.025-6.83.26C2.078 3.285 0 5.154 0 8.61c0 3.506.182 6.13 1.585 8.493 1.584 2.701 4.233 4.182 7.662 4.182h.83c4.209 0 6.494-2.234 7.637-4a9.5 9.5 0 0 0 1.091-2.338C21.792 14.688 24 12.22 24 9.208v-.415c0-3.247-2.13-5.507-5.792-5.87-1.558-.156-2.65-.208-6.857-.208m0 1.947c4.208 0 5.09.052 6.571.182 2.624.311 4.13 1.584 4.13 4v.39c0 2.156-1.792 3.844-3.87 3.844h-.935l-.156.649c-.208 1.013-.597 1.818-1.039 2.546-.909 1.428-2.545 3.064-5.922 3.064h-.805c-2.571 0-4.831-.883-6.078-3.195-1.09-2-1.298-4.155-1.298-7.506 0-2.181.857-3.402 3.012-3.714 1.533-.233 3.559-.26 6.39-.26m6.547 2.287c-.416 0-.65.234-.65.546v2.935c0 .311.234.545.65.545 1.324 0 2.051-.754 2.051-2s-.727-2.026-2.052-2.026m-10.39.182c-1.818 0-3.013 1.48-3.013 3.142 0 1.533.858 2.857 1.949 3.897.727.701 1.87 1.429 2.649 1.896a1.47 1.47 0 0 0 1.507 0c.78-.467 1.922-1.195 2.623-1.896 1.117-1.039 1.974-2.364 1.974-3.897 0-1.662-1.247-3.142-3.039-3.142-1.065 0-1.792.545-2.338 1.298-.493-.753-1.246-1.298-2.312-1.298",
+}
+BUTTONS = {
+    "email": ("email", "25/tcp", "mail"),
+    "facebook": ("facebook", "443/tcp", "facebook"),
+    "sponsor": ("sponsor", "443/tcp", "sponsors"),
+    "kofi": ("ko-fi", "443/tcp", "kofi"),
+    "momo": ("momo", "443/tcp", None),
 }
 
 
-def dot_path(x, y, pitch, dot, rows):
-    return "".join(
-        f"M{x + c * pitch:.1f} {y + r * pitch:.1f}h{dot}v{dot}h-{dot}z"
-        for r, row in enumerate(rows) for c, value in enumerate(row) if value == "1"
-    )
-
-
-def dot_word(x, y, pitch, dot, word):
-    return "".join(dot_path(x + i * 6 * pitch, y, pitch, dot, FONT5X7[ch].split()) for i, ch in enumerate(word))
-
-
-def stack_panel(compact):
-    """The stack as a rack of modules; each lights up, then its link LED blinks."""
-    w, columns, margin = (480, 3, 16) if compact else (860, 6, 20)
-    gap, module_h, total = 10, 72, 10
-    module_w = int((w - 2 * margin - (columns - 1) * gap) / columns)
-    cells, captions, column, row = [], {}, 0, 0
-    for group, items in STACK:
-        for i, item in enumerate(items):
-            if i == 0:
-                captions.setdefault(row, []).append((column, group))
-            cells.append((column, row, item))
-            column += 1
-            if column == columns:
-                column, row = 0, row + 1
-    rows = max(c[1] for c in cells) + 1
-    tops, y, parts = {}, 16, []
-    for r in range(rows):
-        for col, caption in captions.get(r, []):
-            parts.append(t(margin + col * (module_w + gap), y + 11, caption, 12, LED_SOFT, track=0.1))
-        y += 20 if r in captions else 0
-        tops[r] = y
-        y += module_h + gap
-    h = y - gap + 16
-    parts.insert(0, f'<rect x=".75" y=".75" width="{w - 1.5}" height="{h - 1.5}" rx="11" fill="{LED_BLACK}" stroke="{BORDER}" stroke-width="1.5"/>')
-    rng = random.Random(8080)
-    anim = "@keyframes bl{50%{opacity:.12}}"
-    for index, (col, r, (code, name)) in enumerate(cells):
-        x, top = margin + col * (module_w + gap), tops[r]
-        parts.append(f'<rect x="{x}" y="{top}" width="{module_w}" height="{module_h}" rx="5" fill="{BG}" stroke="{BORDER}"/>')
-        cols = len(code) * 6 - 1
-        path = dot_word(x + (module_w - cols * 4) / 2, top + 12, 4, 3.2, code)
-        parts.append(f'<path class="m{index}" d="{path}" fill="{LED_ACCENT}"/>')
-        anim += shown(f"m{index}", 0.2 + index * 0.13, total - 0.6, total)
-        parts.append(t(x + module_w / 2, top + 60, name, 12, LED_TEXT, anchor="middle"))
-        colour = GREEN
-        parts.append(f'<rect class="l{index}" x="{x + module_w - 13}" y="{top + 7}" width="6" height="6" fill="{colour}"/>')
-        anim += f".l{index}{{animation:bl {rng.uniform(0.5, 2.2):.2f}s steps(1,end) infinite}}"
-    names = ", ".join(name for _, items in STACK for _, name in items)
-    return svg(w, h, "".join(parts), "", anim, f"Full stack: {names}.", fixed=False)
-
-
-def button(index, word, note, icon, colour):
-    """A LED push-button; the word lights letter by letter and the icon pulses."""
-    w, h, total, x0 = 240, 64, 7, 58
+def button(label, port, icon):
+    """One open port per link, in the same form as the nmap scan."""
+    w, h, size, baseline, icon_x, icon_size = 222, 40, 13, 25, 122, 15
     parts = [
-        f'<rect x=".75" y=".75" width="{w - 1.5}" height="{h - 1.5}" rx="8" fill="{LED_BLACK}" stroke="{BORDER}" stroke-width="1.5"/>',
-        f'<path class="ic" d="{dot_path(16, 18, 4, 3.2, ICONS[icon].split())}" fill="{colour}"/>',
-        t(x0, 52, note, 11.5, LED_SOFT),
-        f'<rect class="bl" x="{w - 20}" y="14" width="6" height="6" fill="{colour}"/>',
+        f'<rect x=".75" y=".75" width="{w - 1.5}" height="{h - 1.5}" rx="6" fill="{PANEL}" stroke="{LINE}" stroke-width="1.5"/>',
+        t(14, baseline, port, size, SOFT),
+        t(79, baseline, "open", size, GREEN),
+        t(146, baseline, label, size, ACCENT),
     ]
-    anim = (
-        "@keyframes ic{0%,100%{opacity:1}50%{opacity:.4}}.ic{animation:ic 1.6s ease-in-out infinite}"
-        f"@keyframes bl{{50%{{opacity:.12}}}}.bl{{animation:bl {1 + index * 0.37:.2f}s steps(1,end) infinite}}"
-    )
-    for position, letter in enumerate(word):
-        path = dot_path(x0 + position * 6 * 2.7, 13, 2.7, 2.2, FONT5X7[letter].split())
-        parts.append(f'<path class="k{position}" d="{path}" fill="{LED_ACCENT}"/>')
-        anim += shown(f"k{position}", 0.25 + position * 0.09, total - 0.5, total)
-    return svg(w, h, "".join(parts), "", anim, f"{word}: {note}")
+    if icon:
+        scale = icon_size / 24
+        parts.append(f'<path transform="translate({icon_x} {(h - icon_size) / 2}) scale({scale})" d="{BRAND_ICONS[icon]}" fill="{ACCENT}"/>')
+    else:
+        parts.append(t(icon_x + icon_size / 2, baseline, "M", 15, ACCENT, True, "middle"))
+    return svg(w, h, "".join(parts), "", "", f"{port} open: {label}")
 
 
 # ---------------------------------------------------------------- main
@@ -732,6 +756,26 @@ def fetch():
     return payload["data"]["user"]
 
 
+def fetch_events(visible):
+    """Latest public events on the profile's own visible repos, as tcpdump lines (UTC+7)."""
+    request = urllib.request.Request(
+        f"https://api.github.com/users/{USER}/events/public?per_page=100",
+        headers={"Authorization": f"bearer {os.environ['GITHUB_TOKEN']}", "User-Agent": f"{USER}-profile"},
+    )
+    with urllib.request.urlopen(request, timeout=30) as response:
+        payload = json.load(response)
+    lines = []
+    for event in payload:
+        owner, _, name = event["repo"]["name"].partition("/")
+        if owner != USER or name not in visible:
+            continue
+        when = datetime.datetime.fromisoformat(event["created_at"].replace("Z", "+00:00")) + datetime.timedelta(hours=7)
+        size = (event.get("payload") or {}).get("size")
+        length = f", length {size}" if size else ""
+        lines.append(f"{when:%m-%d %H:%M:%S} IP {USER.lower()} > {name}: {event['type']}{length}")
+    return sorted(lines)[-5:]  # the API is not strictly ordered; tcpdump prints oldest first
+
+
 def themed_link(href, stem, alt):
     """One link per theme. GitHub's CSS hides links ending in the other mode's fragment."""
     return "\n".join(
@@ -758,19 +802,24 @@ def main():
     latest = f"{visible[0]['name']} ({visible[0]['pushedAt'][:10]})" if visible else "none"
 
     calendar = user["contributionsCollection"]["contributionCalendar"]
+    events = fetch_events(set(by_name))
+    matches = sum(1 for entry in config["featured"] if entry["repo"] in by_name)
     files, links = {}, []
     for theme, suffix in (("dark", ""), ("light", "-light")):
         apply_theme(theme)
         files.update({
             f"hero{suffix}.svg": hero(False),
             f"hero-compact{suffix}.svg": hero(True),
-            f"nmap{suffix}.svg": terminal(False, latest),
-            f"nmap-compact{suffix}.svg": terminal(True, latest),
-            f"activity{suffix}.svg": activity(calendar),
+            f"session{suffix}.svg": session(False, latest),
+            f"session-compact{suffix}.svg": session(True, latest),
+            f"nuclei{suffix}.svg": nuclei_panel(False, matches),
+            f"nuclei-compact{suffix}.svg": nuclei_panel(True, matches),
+            f"activity{suffix}.svg": activity(calendar, events, False),
+            f"activity-compact{suffix}.svg": activity(calendar, events, True),
+            f"support{suffix}.svg": support_panel(False),
+            f"support-compact{suffix}.svg": support_panel(True),
             f"signoff{suffix}.svg": signoff(),
-            f"stack{suffix}.svg": stack_panel(False),
-            f"stack-compact{suffix}.svg": stack_panel(True),
-            **{f"btn-{name}{suffix}.svg": button(i, *spec) for i, (name, spec) in enumerate(BUTTONS.items())},
+            **{f"btn-{name}{suffix}.svg": button(*spec) for name, spec in BUTTONS.items()},
         })
         index = 0
         for entry in config["featured"]:
