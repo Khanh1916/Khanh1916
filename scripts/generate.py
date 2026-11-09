@@ -135,7 +135,8 @@ def typed(name, x, y, chars, size, bg, total, start, duration, end):
     base = f".{name}{{transform:translateX({length:.1f}px)}}"
     anim = (
         f"@keyframes {name}{{0%,{a:.3f}%{{transform:translateX(0);animation-timing-function:steps({chars},end)}}"
-        f"{b:.3f}%,{c:.3f}%{{transform:translateX({length:.1f}px)}}{c + 0.02:.3f}%,100%{{transform:translateX(0)}}}}"
+        f"{b:.3f}%{{transform:translateX({chars * size * CW:.1f}px)}}{b + 0.02:.3f}%,{c:.3f}%{{transform:translateX({length:.1f}px)}}"
+        f"{c + 0.02:.3f}%,100%{{transform:translateX(0)}}}}"
         f".{name}{{animation:{name} {total}s linear infinite}}"
     )
     return body, base, anim
@@ -157,7 +158,7 @@ def typed_once(name, x, y, chars, size, bg, total, start, duration):
     a, b = start / total * 100, (start + duration) / total * 100
     anim = (
         f"@keyframes {name}{{0%,{a:.3f}%{{transform:translateX(0);animation-timing-function:steps({chars},end)}}"
-        f"{b:.3f}%,100%{{transform:translateX({length:.1f}px)}}}}"
+        f"{b:.3f}%{{transform:translateX({chars * size * CW:.1f}px)}}{b + 0.02:.3f}%,100%{{transform:translateX({length:.1f}px)}}}}"
         f".{name}{{animation:{name} {total}s linear 1 forwards}}"
     )
     return body, base, anim
@@ -697,6 +698,7 @@ def signoff(compact):
     total, line_h, first_y = 14, size + 8, 68
     parts = [t(w / 2, 32, "Connection to Khanh1916 closed.", 13, DIM, anchor="middle")]
     base, anim, start, y, x = "", "", 2.2, first_y, 0.0
+    marks, cell = [], size * CW
     for i, line in enumerate(lines):
         y = first_y + i * line_h
         x = (w - len(line) * size * CW) / 2
@@ -706,12 +708,27 @@ def signoff(compact):
         parts.append(cover)
         base += cover_base
         anim += cover_anim
+        marks.append((x, y, len(line), start, duration))
         start += duration
     h = y + 24
     frame = f'<rect x=".75" y=".75" width="{w - 1.5}" height="{h - 1.5}" rx="11" fill="{PANEL}" stroke="{BORDER}" stroke-width="1.5"/>'
-    cursor_x = x + len(lines[-1]) * size * CW + 3
+    cursor_x = x + len(lines[-1]) * cell + 3
+
+    def at(cx, cy):
+        return f"transform:translate({cx - cursor_x:.1f}px,{cy - y:.1f}px)"
+
+    finish = 13.4 / total * 100
+    stops = []
+    for i, (line_x, line_y, chars, begin, duration) in enumerate(marks):
+        a, b = begin / total * 100, (begin + duration) / total * 100
+        head = f"0%,{a:.3f}%" if i == 0 else f"{a + 0.02:.3f}%"
+        stops.append(f"{head}{{{at(line_x + 3, line_y)};animation-timing-function:steps({chars},end)}}")
+        stops.append(f"{b:.3f}%{{{at(line_x + 3 + chars * cell, line_y)}}}")
+    stops.append(f"{finish:.3f}%{{{at(cursor_x, y)}}}")
+    stops.append(f"{finish + 0.02:.3f}%,100%{{{at(marks[0][0] + 3, marks[0][1])}}}")
     parts.append(f'<rect class="bl" x="{cursor_x:.1f}" y="{y - size * 0.8:.1f}" width="{size * 0.55:.1f}" height="{size}" fill="{ACCENT}"/>')
-    anim += "@keyframes bl{50%{opacity:0}}.bl{animation:bl 1s steps(1,end) infinite}"
+    anim += "@keyframes cur{" + "".join(stops) + "}"
+    anim += f"@keyframes bl{{50%{{opacity:0}}}}.bl{{animation:bl 1s steps(1,end) infinite,cur {total}s linear infinite}}"
     return svg(w, h, frame + "".join(parts), base, anim, f"Connection to Khanh1916 closed. {SIGNOFF}", fixed=False)
 
 
