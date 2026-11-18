@@ -1,0 +1,3 @@
+# Generated files are written with LF by the script and the Actions runner.
+# Keep LF in the working tree on Windows so regeneration never shows spurious diffs.
+* text=auto eol=lf

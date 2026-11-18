@@ -37,18 +37,21 @@ CTF_CIPHER = "0b1d151316130647591a2b1c59031047032e0047011d2b1a5d2e441a5e0c"
 
 FONT = "ui-monospace,SFMono-Regular,Menlo,Consolas,'DejaVu Sans Mono','Liberation Mono',monospace"
 CW = 0.6  # advance width of one character, in em
+# Compact panels are scaled into a phone column of about 343px. At 400px wide, 13px text lands near 11px on
+# screen; the old 480px landed near 9px.
+COMPACT_W = 400
 
 THEMES = {
     "dark": {
         "BG": "#121821", "PANEL": "#0b0f14", "BORDER": "#232c38", "LINE": "#2f3a48", "LED_OFF": "#18202b",
         "TEXT": "#d5dde8", "TITLE": "#f2f6fb", "GRID": "#9fb0c6", "FLASH": "#ffffff", "SOFT": "#93a1b3",
-        "DIM": "#728196", "LED_SOFT": "#a3b1c4", "RED": "#ff5468", "BLUE": "#46adff", "GREEN": "#3ddc97",
+        "DIM": "#768599", "LED_SOFT": "#a3b1c4", "RED": "#ff5468", "BLUE": "#46adff", "GREEN": "#3ddc97",
         "ACCENT": "#e6edf6", "HEAT": ("#26313f", "#4d5e73", "#8fa3ba", "#e6edf6"),
     },
     "light": {
         "BG": "#e7ebf1", "PANEL": "#f4f6f9", "BORDER": "#cfd6e0", "LINE": "#bcc6d3", "LED_OFF": "#e1e6ed",
         "TEXT": "#1f2933", "TITLE": "#0e141b", "GRID": "#5b6b80", "FLASH": "#0e141b", "SOFT": "#4f5d6e",
-        "DIM": "#66748a", "LED_SOFT": "#5b6b80", "RED": "#c5301f", "BLUE": "#1c5fc4", "GREEN": "#127a4a",
+        "DIM": "#5d6c82", "LED_SOFT": "#5b6b80", "RED": "#c5301f", "BLUE": "#1c5fc4", "GREEN": "#127a4a",
         "ACCENT": "#1f2a37", "HEAT": ("#c9d2de", "#8f9dae", "#4f5d6e", "#1f2a37"),
     },
 }
@@ -76,8 +79,10 @@ apply_theme("dark")
 
 # ---------------------------------------------------------------- primitives
 
-def t(x, y, s, size, fill=TEXT, bold=False, anchor="start", track=0.0, cls=""):
-    """One run of text with a fixed advance per character."""
+def t(x, y, s, size, fill=None, bold=False, anchor="start", track=0.0, cls=""):
+    """One run of text with a fixed advance per character. `fill` defaults to the current theme's TEXT."""
+    if fill is None:  # resolved per call: a default of TEXT would freeze the dark theme at import
+        fill = TEXT
     length = len(s) * size * (CW + track)
     if anchor == "middle":
         x -= length / 2
@@ -237,9 +242,9 @@ def led_wire(width, y, margin):
 def hero(compact):
     total = 12
     if compact:
-        w, h = 480, 452
-        board, anim = led_board(44, 50, 7.4, 5.9, 53, 17, [("CAO THANH", 0, 1), ("LAM", 18, 9)], total)
-        label_y, aka_y, wire_y = 34, 196, 238
+        w, h = COMPACT_W, 435
+        board, anim = led_board(30, 50, 6.4, 5.1, 53, 17, [("CAO THANH", 0, 1), ("LAM", 18, 9)], total)
+        label_y, aka_y, wire_y = 34, 179, 221
     else:
         w, h = 860, 322
         board, anim = led_board(45, 50, 10, 8, 77, 9, [("CAO THANH LAM", 0, 1)], total)
@@ -253,7 +258,7 @@ def hero(compact):
     anim += wire_anim
     for i, (label, colour, first, second) in enumerate(HERO_COLUMNS):
         if compact:
-            y = 292 + i * 56
+            y = 275 + i * 56
             parts.append(f'<rect x="30" y="{y - 10}" width="9" height="9" fill="{colour}"/>')
             parts.append(t(47, y, label, 13, colour, True, track=0.06))
             parts.append(t(30, y + 25, f"{first} {second}", 15, LED_TEXT))
@@ -284,7 +289,7 @@ SERVICES = [
     ("1883/tcp", "open", "mqtt", "IoT intrusion detection", "IoT intrusion detection"),
     ("2375/tcp", "open", "docker", "Docker / Compose / GitHub Actions", "Docker / GitHub Actions"),
     ("3306/tcp", "open", "mysql", "MySQL / SQL", "MySQL / SQL"),
-    ("6006/tcp", "open", "ml-stack", "PyTorch / scikit-learn / pandas / NumPy", "PyTorch / sklearn / pandas"),
+    ("6006/tcp", "open", "ml-stack", "PyTorch / scikit-learn / pandas / NumPy", "PyTorch / scikit / pandas"),
     ("6443/tcp", "open", "kubernetes", "Kubernetes / multi-tenant labs", "Kubernetes"),
     ("9092/tcp", "open", "flower", "Flower / Opacus / DP / SecAgg+", "Flower / Opacus / SecAgg+"),
     ("31337/tcp", "filtered", "flag?", "see the end of this page", "see the end of this page"),
@@ -331,32 +336,37 @@ def stack_lines(compact):
 
 def session(compact, latest):
     """whoami, id, .plan, nmap and ls as one terminal window."""
-    w = 480 if compact else 860
+    w = COMPACT_W if compact else 860
     size, line_h, x = (13, 20, 20) if compact else (16, 23, 20)
     wrap = int((w - 2 * x) / (size * CW))
     open_count = sum(1 for s in SERVICES if s[1] == "open")
+
+    def wrapped(text, colour):
+        """One output row per terminal line: a real terminal wraps long output too."""
+        return [[(line, colour)] for line in textwrap.wrap(text, wrap, break_long_words=False)]
+
     if compact:
-        table = [[(f"{'PORT':<11}{'SERVICE':<12}STACK", DIM)]]
+        table = [[(f"{'PORT':<10}{'SERVICE':<11}STACK", DIM)]]
     else:
         table = [[(f"{'PORT':<11}{'STATE':<10}{'SERVICE':<13}VERSION", DIM)]]
     for port, state, service, long_text, short_text in SERVICES:
         hidden = state != "open"
         colour = ACCENT if hidden else GREEN
         if compact:
-            table.append([(f"{port:<11}", LED_SOFT), (f"{service:<12}", colour), (short_text, ACCENT if hidden else TEXT)])
+            table.append([(f"{port:<10}", LED_SOFT), (f"{service:<11}", colour), (short_text, ACCENT if hidden else TEXT)])
         else:
             table.append([(f"{port:<11}", LED_SOFT), (f"{state:<10}", colour), (f"{service:<13}", TEXT), (long_text, ACCENT if hidden else SOFT)])
     blocks = [
         ("whoami", [[("cao-thanh-lam", TEXT)]]),
-        ("id", [[("uid=1916(cao-thanh-lam) groups=red,blue,privacy", TEXT)]]),
+        ("id", wrapped("uid=1916(cao-thanh-lam) groups=red,blue,privacy", TEXT)),
         ("cat ~/.plan", [[(line, TEXT)] for line in textwrap.wrap(PLAN, wrap)] + [[], [("contact: southkhanh@gmail.com", TEXT)], [], [("# You're the pentester now.", DIM)]]),
         ("nmap -sV github.com/Khanh1916", [
             [("Starting Nmap against Cao Thanh Lam", SOFT)],
-            [(f"Host is up. Latest push: {latest}", SOFT)],
+            *wrapped(f"Host is up. Latest push: {latest}", SOFT),
             [],
             *table,
             [],
-            [("Service Info: OS: Linux, Windows, Cisco IOS, Junos", SOFT)],
+            *wrapped("Service Info: OS: Linux, Windows, Cisco IOS, Junos", SOFT),
             [(f"Nmap done: 1 human scanned, {open_count} services open", SOFT)],
         ]),
         ("ls ~/stack", stack_lines(compact)),
@@ -403,7 +413,7 @@ def session(compact, latest):
 
 def command_panel(command, lines, compact, label):
     """A single command and its output, framed like every other panel."""
-    w = 480 if compact else 860
+    w = COMPACT_W if compact else 860
     size, line_h, x = (13, 20, 20) if compact else (16, 23, 20)
     per_line = 0.15
     total = round(timeline_length([(command, lines)], per_line) + 1)
@@ -431,14 +441,14 @@ def nuclei_panel(compact, matches):
 
 
 def support_panel(compact):
-    width = 56 if compact else 85
+    width = int((COMPACT_W - 40) / (13 * CW)) if compact else 85
     text = [
         "If my labs or tools helped you learn or build something, you can support me.",
         "Thank you!",
         "International: GitHub Sponsors preferred. Ko-fi for card or PayPal, no GitHub needed.",
         "Vietnam: MoMo preferred.",
     ]
-    lines = [[(line, TEXT)] for paragraph in text for line in textwrap.wrap(paragraph, width)]
+    lines = [[(line, TEXT)] for paragraph in text for line in textwrap.wrap(paragraph, width, break_on_hyphens=False)]  # keep "Ko-fi" whole
     return command_panel("./support", lines, compact, " ".join(text))
 
 
@@ -516,7 +526,7 @@ def anim_oracle(repo):
     chips = [("C1 SQLI", 20, 100), ("C2 LOGIC", 128, 108), ("C3 SUPPLY CHAIN", 244, 136)]
     for i, (text, cx, width) in enumerate(chips):
         body += f'<rect x="{cx}" y="172" width="{width}" height="28" rx="5" fill="{BG}" stroke="{LINE}"/>'
-        body += t(cx + width / 2, 190, text, 12, DIM, anchor="middle")
+        body += t(cx + width / 2, 190, text, 12, SOFT, anchor="middle")  # SOFT, not DIM: DIM is under 4.5:1 on BG
         lit = t(cx + width / 2, 190, text, 12, TITLE, True, "middle")
         body += f'<g class="ch{i}"><rect x="{cx}" y="172" width="{width}" height="28" rx="5" fill="{RED}" fill-opacity=".3" stroke="{RED}"/>{lit}</g>'
         anim += shown(f"ch{i}", 3.3 + i * 1.4, 9.3, total)
@@ -640,7 +650,7 @@ ANIMATIONS = {"oracle": anim_oracle, "secbaseline": anim_secbaseline, "federated
 
 def activity(calendar, events, compact):
     """Recent public GitHub events as tcpdump lines, then the year as a capture map."""
-    w, margin, size, line_h = (480, 20, 13, 20) if compact else (860, 32, 15, 22)
+    w, margin, size, line_h = (COMPACT_W, 20, 13, 20) if compact else (860, 32, 15, 22)
     chars = int((w - 2 * margin) / (size * CW))
     weeks = calendar["weeks"]
     days = [day for week in weeks for day in week["contributionDays"]]
@@ -656,13 +666,15 @@ def activity(calendar, events, compact):
     rows = events or ["(no public packets captured)"]
     for event in rows:
         y += line_h
-        text = event[6:] if compact and events else event
+        # Compact drops the date, the seconds and the "IP user" noise so the type and size still fit in 46 columns.
+        text = re.sub(r"^(\d\d:\d\d):\d\d IP \S+ > ", r"\1 > ", event[6:]) if compact and events else event
         clipped = text if len(text) <= chars else text[:chars - 1] + "…"
         parts.append(t(margin, y, clipped, size, SOFT))
     y += line_h + 8
     burst = "day burst" if compact else "day longest burst"
-    parts.append(runs(margin, y, [(f"{total}", ACCENT), (" packets  ", SOFT), (f"{active}", ACCENT), (" active days  ", SOFT),
-                                  (f"{best}", ACCENT), (f" {burst}  ", SOFT), (f"{peak}", ACCENT), (" peak", SOFT)], size - 1))
+    gap = " " if compact else "  "  # a four-digit total must still fit the 400px compact panel
+    parts.append(runs(margin, y, [(f"{total}", ACCENT), (f" packets{gap}", SOFT), (f"{active}", ACCENT), (f" active days{gap}", SOFT),
+                                  (f"{best}", ACCENT), (f" {burst}{gap}", SOFT), (f"{peak}", ACCENT), (" peak", SOFT)], size - 1))
     pitch = (w - 2 * margin) / len(weeks)
     cell = round(pitch * 0.8, 2)
     y0 = y + 16
@@ -695,7 +707,7 @@ SIGNOFF = "You can’t trust code that you did not totally create yourself."
 
 
 def signoff(compact):
-    w, size, width = (480, 16, 38) if compact else (860, 20, 80)
+    w, size, width = (COMPACT_W, 16, 36) if compact else (860, 20, 80)
     lines = textwrap.wrap(SIGNOFF, width)
     total, line_h, first_y = 14, size + 8, 68
     parts = [t(w / 2, 32, "Connection to Khanh1916 closed.", 13, DIM, anchor="middle")]
@@ -844,10 +856,12 @@ def fetch_events(visible):
 
 
 def themed_link(href, stem, alt):
-    """One link per theme. GitHub's CSS hides links ending in the other mode's fragment."""
-    return "\n".join(
-        f'  <a href="{href}#gh-{mode}-mode-only"><img src="{RAW}/{stem}{suffix}.svg" alt="{alt}"/></a>'
-        for mode, suffix in (("light", "-light"), ("dark", ""))
+    """One link whose image follows the viewer's colour scheme (light is the fallback)."""
+    return (
+        f'  <a href="{href}"><picture>\n'
+        f'    <source media="(prefers-color-scheme: dark)" srcset="{RAW}/{stem}.svg">\n'
+        f'    <img src="{RAW}/{stem}-light.svg" alt="{alt}"/>\n'
+        f'  </picture></a>'
     )
 
 
