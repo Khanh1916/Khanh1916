@@ -1,0 +1,9 @@
+# Agent context files (local only; see AGENTS.md)
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+docs/
+
+# Python
+__pycache__/
+*.pyc

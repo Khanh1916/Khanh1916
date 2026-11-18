@@ -16,9 +16,16 @@ on:
 permissions:
   contents: write
 
+# One run at a time, so a cron run and a push run cannot race to commit.
+# A queued run replaces an older queued one; the running one is never cancelled mid-push.
+concurrency:
+  group: rescan
+  cancel-in-progress: false
+
 jobs:
   rescan:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -37,4 +44,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "chore: rescan profile assets"
+          # Someone may have pushed while the script ran; replay our commit on top of it.
+          git pull --rebase origin main
           git push

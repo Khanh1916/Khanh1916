@@ -19,6 +19,8 @@ import random
 import re
 import sys
 import textwrap
+import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 from xml.sax.saxutils import escape
@@ -769,6 +771,21 @@ def button(label, port, icon):
 
 # ---------------------------------------------------------------- main
 
+def api_json(request, attempts=4):
+    """Open a GitHub API request and parse the JSON, retrying rate limits and 5xx errors with backoff."""
+    for attempt in range(1, attempts + 1):
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                return json.load(response)
+        except urllib.error.HTTPError as error:  # before URLError, which it subclasses
+            if (error.code != 429 and error.code < 500) or attempt == attempts:
+                raise
+        except (urllib.error.URLError, TimeoutError):
+            if attempt == attempts:
+                raise
+        time.sleep(2 ** attempt)
+
+
 def fetch():
     token = os.environ.get("GITHUB_TOKEN")
     if not token:
@@ -796,11 +813,13 @@ def fetch():
         data=json.dumps({"query": query, "variables": {"login": USER}}).encode(),
         headers={"Authorization": f"bearer {token}", "User-Agent": f"{USER}-profile"},
     )
-    with urllib.request.urlopen(request, timeout=30) as response:
-        payload = json.load(response)
+    payload = api_json(request)
     if payload.get("errors"):
         sys.exit(f"GraphQL error: {payload['errors']}")
-    return payload["data"]["user"]
+    user = (payload.get("data") or {}).get("user")
+    if not user:
+        sys.exit(f"GitHub returned no data for user {USER}")
+    return user
 
 
 def fetch_events(visible):
@@ -809,8 +828,7 @@ def fetch_events(visible):
         f"https://api.github.com/users/{USER}/events/public?per_page=100",
         headers={"Authorization": f"bearer {os.environ['GITHUB_TOKEN']}", "User-Agent": f"{USER}-profile"},
     )
-    with urllib.request.urlopen(request, timeout=30) as response:
-        payload = json.load(response)
+    payload = api_json(request)
     lines = []
     for event in payload:
         owner, _, name = event["repo"]["name"].partition("/")
@@ -819,8 +837,10 @@ def fetch_events(visible):
         when = datetime.datetime.fromisoformat(event["created_at"].replace("Z", "+00:00")) + datetime.timedelta(hours=7)
         size = (event.get("payload") or {}).get("size")
         length = f", length {size}" if size else ""
-        lines.append(f"{when:%m-%d %H:%M:%S} IP {USER.lower()} > {name}: {event['type']}{length}")
-    return sorted(lines)[-5:]  # the API is not strictly ordered; tcpdump prints oldest first
+        lines.append((when, f"{when:%m-%d %H:%M:%S} IP {USER.lower()} > {name}: {event['type']}{length}"))
+    # The API is not strictly ordered and the text starts with MM-DD, which sorts wrongly
+    # across New Year, so order by the real timestamp. tcpdump prints oldest first.
+    return [line for _, line in sorted(lines)[-5:]]
 
 
 def themed_link(href, stem, alt):
