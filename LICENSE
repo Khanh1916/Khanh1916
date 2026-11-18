@@ -1,16 +1,65 @@
 Copyright (c) 2026 Nguyen Nam Khanh (a.k.a. Cao Thanh Lam, @Khanh1916)
+
+This repository holds the author's personal GitHub profile. It is licensed in
+two parts.
+
+
+1. Code under the MIT License: scripts/ and tests/
+---------------------------------------------------
+
+Everything in scripts/ and tests/ is released under the MIT License below. You
+may use, copy, modify and distribute that code, including to build your own
+profile generator.
+
+The MIT License covers the code only. The author's personal content that
+appears as text inside that code is part of the profile and stays reserved
+under part 2: the name, pen name and contact details, the bio and tagline
+strings, the list of skills and projects, and the profile's capture-the-flag
+material. Replace these with your own when
+you reuse the script.
+
+    MIT License
+
+    Copyright (c) 2026 Nguyen Nam Khanh
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+
+2. Everything else: all rights reserved
+---------------------------------------
+
 All rights reserved, to the extent provided by applicable law.
 
-This repository holds the author's personal GitHub profile: README.md, the
-generated graphics in assets/, profile.json, scripts/generate.py and the
-workflow that runs it.
+This covers README.md, the generated graphics in assets/, profile.json, the
+GitHub Actions workflows in .github/, and the personal content described in
+part 1.
 
-You may view this repository, and fork it on GitHub, as GitHub's Terms of
-Service allow. No other permission is granted. Without prior written
-permission you may not copy, modify, redistribute or reuse its code, graphics
-or text, in whole or in part, including as a template for another profile.
+You may view this material, and fork the repository on GitHub, as GitHub's
+Terms of Service allow. No other permission is granted. Without prior written
+permission you may not copy, modify, redistribute or reuse it, in whole or in
+part, including as a template for another profile.
 
 Permission requests: southkhanh@gmail.com
+
+
+Third-party material
+--------------------
 
 This notice does not cover third-party material:
 

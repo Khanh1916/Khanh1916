@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Offline tests for scripts/generate.py. Standard library only, no token, no network.
 
 Run from the repo root:  python -B -m unittest discover -s tests -v

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+# The code is MIT; the author's personal text inside it is not. See LICENSE.
 """Render the profile README's animated SVGs and its auto-updated sections.
 
 Standard library only. Needs GITHUB_TOKEN. Everything about a project (About

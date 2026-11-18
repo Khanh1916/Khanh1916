@@ -85,9 +85,11 @@ No guessing and no brute force. A browser is enough.
 hint 1: read this page the way a browser doesn't
 hint 2: what you find sends you somewhere else; the scan has the last piece
 
-check your answer locally, so nobody has to see it:
-$ echo -n 'flag{...}' | sha256sum
-b83a1eafdd4db16c84ffdec5f733d35f4a43a31df18a928cf728bceab8ebcd80  -
+check your answer locally, so nobody has to see it (python3, slow on purpose):
+$ python3 -c "import hashlib,sys; print(hashlib.scrypt( \
+    sys.argv[1].encode(), salt=b'f7d5ec3334921e7b', \
+    n=32768, r=8, p=1, dklen=16, maxmem=67108864).hex())" 'flag{...}'
+8ce27edd7fbfb890a66adc4dde752dd8
 
 solved it? write to southkhanh@gmail.com, subject: 31337
 ```
