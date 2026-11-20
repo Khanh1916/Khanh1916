@@ -2,8 +2,7 @@
   "featured": [
     { "repo": "oracle-sec-lab", "tag": "RED", "color": "red", "animation": "oracle" },
     { "repo": "secbaseline", "tag": "BLUE", "color": "blue", "animation": "secbaseline" },
-    { "repo": "PP-FedData", "tag": "GREEN", "color": "green", "animation": "federated" },
-    { "repo": "viet-skill", "tag": "AI AGENTS", "color": "accent", "animation": "lunar" }
+    { "repo": "PP-FedData", "tag": "GREEN", "color": "green", "animation": "federated" }
   ],
   "hidden": [
     "greenlight",

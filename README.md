@@ -57,10 +57,6 @@
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/card-pp-feddata.svg">
     <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/card-pp-feddata-light.svg" alt="PP-FedData: Privacy-preserving synthetic data for federated learning"/>
   </picture></a>
-  <a href="https://github.com/Khanh1916/viet-skill"><picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/card-viet-skill.svg">
-    <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/card-viet-skill-light.svg" alt="viet-skill: Skill cho AI agent: lịch âm tính theo giờ Việt Nam (AI hay nhầm sang lịch Trung Quốc) và văn bản hành chính theo Nghị định 30"/>
-  </picture></a>
 </p>
 
 <!-- findings:end -->

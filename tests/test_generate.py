@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 import generate as g  # noqa: E402
 
-FEATURED = ["oracle-sec-lab", "secbaseline", "PP-FedData", "viet-skill"]
+FEATURED = ["oracle-sec-lab", "secbaseline", "PP-FedData"]
 BUTTON_COUNT = len(g.BUTTONS)
 PER_THEME = 12 + BUTTON_COUNT + len(FEATURED)  # hero, session, nuclei, activity, support, signoff x2 sizes
 
