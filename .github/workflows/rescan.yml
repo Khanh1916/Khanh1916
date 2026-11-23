@@ -2,10 +2,10 @@ name: rescan
 
 # Redraws the profile from live repo data: About text, stars, languages,
 # releases, new public repos and contributions.
-# Every 8 hours: 01:17, 09:17 and 17:17 in Vietnam (UTC+7).
+# Every 3 hours at :17 UTC, which is 07:17, 10:17, 13:17 ... in Vietnam (UTC+7).
 on:
   schedule:
-    - cron: "17 2,10,18 * * *"
+    - cron: "17 */3 * * *"
   workflow_dispatch:
   push:
     branches: [main]
