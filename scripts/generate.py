@@ -68,9 +68,9 @@ def apply_theme(name):
         LEVELS=dict(zip(("NONE", "FIRST_QUARTILE", "SECOND_QUARTILE", "THIRD_QUARTILE", "FOURTH_QUARTILE"),
                         (palette["LED_OFF"], *palette["HEAT"]))),
         HERO_COLUMNS=[
-            ("offense", palette["RED"], "I break systems to see how they fail."),
-            ("defense", palette["BLUE"], "I harden them and catch the drift."),
-            ("privacy", palette["GREEN"], "I learn from data without reading it."),
+            ("offense", palette["RED"], "Break systems to see how they fail."),
+            ("defense", palette["BLUE"], "Harden them and catch the drift."),
+            ("privacy", palette["GREEN"], "Learn from data without reading it."),
         ],
     )
 
@@ -206,7 +206,7 @@ def hero(compact):
             parts.append(t(x + 20, y, label, 16, colour, True))
             parts.append(t(x + 120, y, sentence, 17))
     anim = "@keyframes bl{50%{opacity:0}}.bl{animation:bl 1s steps(1,end) infinite}"
-    label = "Cao Thanh Lam, a.k.a. Nguyen Nam Khanh. Cybersecurity researcher: I break systems to see how they fail, I harden them and catch the drift, and I learn from data without reading it."
+    label = "Cao Thanh Lam, a.k.a. Nguyen Nam Khanh. Cybersecurity researcher: break systems to see how they fail, harden them and catch the drift, and learn from data without reading it."
     comment = f"31337/tcp stage 2: {CTF_CIPHER}"
     return svg(w, h, "".join(parts), "", anim, label, comment, fixed=False)
 
@@ -227,8 +227,8 @@ SERVICES = [
 
 
 PLAN = (
-    "I write about the technology I work with: things I build, tools I explore and problems "
-    "I follow from the first command to the result."
+    "Notes on the technology at hand: things built, tools explored and problems followed "
+    "from the first command to the result."
 )
 
 

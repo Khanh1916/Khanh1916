@@ -5,7 +5,7 @@
   <source media="(prefers-color-scheme: dark) and (max-width: 600px)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/hero-compact.svg">
   <source media="(max-width: 600px)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/hero-compact-light.svg">
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/hero.svg">
-  <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/hero-light.svg" width="100%" alt="Cao Thanh Lam, a.k.a. Nguyen Nam Khanh. Cybersecurity researcher: I break systems to see how they fail, I harden them and catch the drift, and I learn from data without reading it.">
+  <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/hero-light.svg" width="100%" alt="Cao Thanh Lam, a.k.a. Nguyen Nam Khanh. Cybersecurity researcher: break systems to see how they fail, harden them and catch the drift, and learn from data without reading it.">
 </picture>
 </p>
 
