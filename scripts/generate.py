@@ -64,14 +64,13 @@ def apply_theme(name):
     palette = THEMES[name]
     globals().update(palette)
     globals().update(
-        LED_BLACK=palette["PANEL"], LED_ACCENT=palette["ACCENT"], LED_TEXT=palette["TEXT"],
         COLOURS={"red": palette["RED"], "blue": palette["BLUE"], "green": palette["GREEN"], "accent": palette["ACCENT"]},
         LEVELS=dict(zip(("NONE", "FIRST_QUARTILE", "SECOND_QUARTILE", "THIRD_QUARTILE", "FOURTH_QUARTILE"),
                         (palette["LED_OFF"], *palette["HEAT"]))),
         HERO_COLUMNS=[
-            ("RED / OFFENSE", palette["RED"], "I break systems", "to see how they fail."),
-            ("BLUE / DEFENSE", palette["BLUE"], "I harden them", "and catch the drift."),
-            ("GREEN / PRIVACY", palette["GREEN"], "I learn from data", "without reading it."),
+            ("offense", palette["RED"], "I break systems to see how they fail."),
+            ("defense", palette["BLUE"], "I harden them and catch the drift."),
+            ("privacy", palette["GREEN"], "I learn from data without reading it."),
         ],
     )
 
@@ -175,112 +174,41 @@ def typed_once(name, x, y, chars, size, bg, total, start, duration):
 
 # ---------------------------------------------------------------- hero
 
-FONT5X7 = {
-    "N": "10001 11001 10101 10011 10001 10001 10001", "G": "01110 10001 10000 10111 10001 10001 01110",
-    "U": "10001 10001 10001 10001 10001 10001 01110", "Y": "10001 10001 01010 00100 00100 00100 00100",
-    "E": "11111 10000 10000 11110 10000 10000 11111", "A": "01110 10001 10001 11111 10001 10001 10001",
-    "M": "10001 11011 10101 10101 10001 10001 10001", "K": "10001 10010 10100 11000 10100 10010 10001",
-    "H": "10001 10001 10001 11111 10001 10001 10001", "O": "01110 10001 10001 10001 10001 10001 01110",
-    "P": "11110 10001 10001 11110 10000 10000 10000", "S": "01111 10000 10000 01110 00001 00001 11110",
-    "Q": "01110 10001 10001 10001 10101 10010 01101", "L": "10000 10000 10000 10000 10000 10000 11111",
-    "X": "10001 10001 01010 00100 01010 10001 10001", "D": "11110 10001 10001 10001 10001 10001 11110",
-    "R": "11110 10001 10001 11110 10100 10010 10001", "8": "01110 10001 10001 01110 10001 10001 01110",
-    "T": "11111 00100 00100 00100 00100 00100 00100", "C": "01110 10001 10000 10000 10000 10001 01110",
-    "F": "11111 10000 10000 11110 10000 10000 10000", "W": "10001 10001 10001 10101 10101 11011 10001",
-    "I": "01110 00100 00100 00100 00100 00100 01110", "B": "11110 10001 10001 11110 10001 10001 11110",
-    "-": "00000 00000 00000 11111 00000 00000 00000",
-}
-
-
-def led_board(x0, y0, pitch, dot, columns, rows, lines, total):
-    """A dot-matrix panel. lines: (text, first column, first row)."""
-    board = (
-        f'<defs><pattern id="led" x="{x0}" y="{y0}" width="{pitch}" height="{pitch}" patternUnits="userSpaceOnUse">'
-        f'<rect width="{dot}" height="{dot}" fill="{LED_OFF}"/></pattern></defs>'
-        f'<rect x="{x0}" y="{y0}" width="{columns * pitch:.1f}" height="{rows * pitch:.1f}" fill="url(#led)"/>'
-    )
-    anim, index = "", 0
-    for text, start_column, start_row in lines:
-        for position, letter in enumerate(text):
-            if letter == " ":
-                continue
-            glyph = FONT5X7[letter].split()
-            squares = "".join(
-                f"M{x0 + (start_column + position * 6 + c) * pitch:.1f} {y0 + (start_row + r) * pitch:.1f}h{dot}v{dot}h-{dot}z"
-                for r in range(7) for c in range(5) if glyph[r][c] == "1"
-            )
-            board += f'<path class="k{index}" d="{squares}" fill="{LED_ACCENT}"/>'
-            anim += shown(f"k{index}", 0.3 + index * 0.1, total - 0.6, total)
-            index += 1
-    return board, anim
-
-
-def led_wire(width, y, margin):
-    """Attack packets stop at the shield; only noised squares continue."""
-    left, right, cx = margin, width - margin, width // 2
-    run_in, run_out = cx - 18 - left - 12, right - cx - 24
-    body = f'<rect x="{left}" y="{y - .75}" width="{right - left}" height="1.5" fill="{LINE}"/>'
-    anim = (
-        f"@keyframes pk{{0%{{transform:translateX(0);opacity:0}}4%,94%{{opacity:1}}100%{{transform:translateX({run_in}px);opacity:0}}}}"
-        ".pk{animation:pk 3s linear infinite}"
-    )
-    for i in range(5):
-        body += f'<rect class="pk" x="{left}" y="{y - 3}" width="12" height="6" fill="{RED}" style="animation-delay:{-i * .6:.1f}s"/>'
-    for n, (a, b, c) in enumerate(((-8, 7, -4), (9, -9, 5), (-6, 8, 0))):
-        anim += (
-            f"@keyframes o{n}{{0%{{transform:translate(0,0);opacity:0}}4%,94%{{opacity:1}}30%{{transform:translate({run_out * .3:.0f}px,{a}px)}}"
-            f"65%{{transform:translate({run_out * .65:.0f}px,{b}px)}}100%{{transform:translate({run_out}px,{c}px);opacity:0}}}}"
-            f".o{n}{{animation:o{n} 3s linear infinite}}"
-        )
-    for i in range(5):
-        body += f'<rect class="ot o{i % 3}" x="{cx + 24}" y="{y - 2.5}" width="5" height="5" fill="{GREEN}" style="animation-delay:{-i * .6:.1f}s"/>'
-    body += (
-        f'<path d="M{cx} {y - 22}l17 6v13c0 13-10 21-17 25c-7-4-17-12-17-25v-13z" fill="{LED_BLACK}" stroke="{LED_ACCENT}" stroke-width="2.5"/>'
-        f'<path d="M{cx - 8} {y}l6 6l11-12" fill="none" stroke="{LED_ACCENT}" stroke-width="2.5" stroke-linecap="square"/>'
-    )
-    return body, ".pk,.ot{opacity:0}", anim
-
-
 def hero(compact):
-    total = 12
+    """Name, role and the three themes: static, left aligned, one blinking cursor."""
+    w, h = (COMPACT_W, 300) if compact else (860, 262)
+    x = 20 if compact else 40
+    name, name_size, name_y, track = "CAO THANH LAM", 36 if compact else 52, 56 if compact else 76, 0.04
+    parts = [f'<rect x=".75" y=".75" width="{w - 1.5}" height="{h - 1.5}" rx="11" fill="{PANEL}" stroke="{BORDER}" stroke-width="1.5"/>']
+    parts.append(t(x, name_y, name, name_size, TITLE, True, track=track))
+    cursor_x = x + len(name) * name_size * (CW + track) + 6
+    parts.append(
+        f'<rect class="bl" x="{cursor_x:.1f}" y="{name_y - name_size * 0.74:.1f}" '
+        f'width="{name_size * 0.5:.1f}" height="{name_size * 0.78:.1f}" fill="{ACCENT}"/>'
+    )
     if compact:
-        w, h = COMPACT_W, 435
-        board, anim = led_board(30, 50, 6.4, 5.1, 53, 17, [("CAO THANH", 0, 1), ("LAM", 18, 9)], total)
-        label_y, aka_y, wire_y = 34, 179, 221
+        parts.append(t(x, 88, "Cybersecurity researcher", 15, TEXT))
+        parts.append(t(x, 110, "a.k.a. Nguyen Nam Khanh", 14, LED_SOFT))
+        rule_y = 128
     else:
-        w, h = 860, 322
-        board, anim = led_board(45, 50, 10, 8, 77, 9, [("CAO THANH LAM", 0, 1)], total)
-        label_y, aka_y, wire_y = 36, 160, 192
-    cx = w / 2
-    parts = [f'<rect x=".75" y=".75" width="{w - 1.5}" height="{h - 1.5}" rx="11" fill="{LED_BLACK}" stroke="{BORDER}" stroke-width="1.5"/>', board]
-    parts.append(t(cx, label_y, "CYBERSECURITY RESEARCHER", 13 if compact else 15, LED_ACCENT, anchor="middle", track=0.12))
-    parts.append(t(cx, aka_y, "a.k.a. Nguyen Nam Khanh  /  @Khanh1916", 14 if compact else 16, LED_SOFT, anchor="middle"))
-    wire, base, wire_anim = led_wire(w, wire_y, 24 if compact else 36)
-    parts.append(wire)
-    anim += wire_anim
-    for i, (label, colour, first, second) in enumerate(HERO_COLUMNS):
+        parts.append(runs(x, 112, [("Cybersecurity researcher", TEXT), ("  /  a.k.a. Nguyen Nam Khanh", LED_SOFT)], 17))
+        rule_y = 136
+    parts.append(f'<rect x="{x}" y="{rule_y}" width="{w - 2 * x}" height="1.5" fill="{LINE}"/>')
+    for i, (label, colour, sentence) in enumerate(HERO_COLUMNS):
         if compact:
-            y = 275 + i * 56
-            parts.append(f'<rect x="30" y="{y - 10}" width="9" height="9" fill="{colour}"/>')
-            parts.append(t(47, y, label, 13, colour, True, track=0.06))
-            parts.append(t(30, y + 25, f"{first} {second}", 15, LED_TEXT))
+            y = 158 + i * 48
+            parts.append(f'<rect x="{x}" y="{y - 9}" width="9" height="9" fill="{colour}"/>')
+            parts.append(t(x + 17, y, label, 13, colour, True))
+            parts.append(t(x, y + 22, sentence, 14))
         else:
-            x = (150, 430, 710)[i]
-            width = len(label) * 14 * 0.68
-            parts.append(f'<rect x="{x - width / 2 - 14:.1f}" y="236" width="9" height="9" fill="{colour}"/>')
-            parts.append(t(x + 2, 245, label, 13.5, colour, True, "middle", 0.08))
-            parts.append(t(x, 274, first, 19, LED_TEXT, anchor="middle"))
-            parts.append(t(x, 299, second, 19, LED_TEXT, anchor="middle"))
-    if not compact:
-        parts.append(f'<rect class="u" x="110" y="310" width="80" height="2" fill="{LED_ACCENT}"/>')
-        base += ".u{opacity:0}"
-        anim += (
-            "@keyframes u{0%,33.3%{transform:translateX(0);opacity:1}33.4%,66.6%{transform:translateX(280px);opacity:1}"
-            "66.7%,100%{transform:translateX(560px);opacity:1}}.u{animation:u 9s linear infinite}"
-        )
+            y = 172 + i * 31
+            parts.append(f'<rect x="{x}" y="{y - 10}" width="10" height="10" fill="{colour}"/>')
+            parts.append(t(x + 20, y, label, 16, colour, True))
+            parts.append(t(x + 120, y, sentence, 17))
+    anim = "@keyframes bl{50%{opacity:0}}.bl{animation:bl 1s steps(1,end) infinite}"
     label = "Cao Thanh Lam, a.k.a. Nguyen Nam Khanh. Cybersecurity researcher: I break systems to see how they fail, I harden them and catch the drift, and I learn from data without reading it."
     comment = f"31337/tcp stage 2: {CTF_CIPHER}"
-    return svg(w, h, "".join(parts), base, anim, label, comment, fixed=False)
+    return svg(w, h, "".join(parts), "", anim, label, comment, fixed=False)
 
 
 # ---------------------------------------------------------------- nmap terminal
@@ -337,7 +265,7 @@ def stack_lines(compact):
 
 
 def session(compact, latest):
-    """whoami, id, .plan, nmap and ls as one terminal window."""
+    """whoami, .plan, nmap and ls as one terminal window."""
     w = COMPACT_W if compact else 860
     size, line_h, x = (13, 20, 20) if compact else (16, 23, 20)
     wrap = int((w - 2 * x) / (size * CW))
@@ -360,7 +288,6 @@ def session(compact, latest):
             table.append([(f"{port:<11}", LED_SOFT), (f"{state:<10}", colour), (f"{service:<13}", TEXT), (long_text, ACCENT if hidden else SOFT)])
     blocks = [
         ("whoami", [[("cao-thanh-lam", TEXT)]]),
-        ("id", wrapped("uid=1916(cao-thanh-lam) groups=red,blue,privacy", TEXT)),
         ("cat ~/.plan", [[(line, TEXT)] for line in textwrap.wrap(PLAN, wrap)] + [[], [("contact: southkhanh@gmail.com", TEXT)], [], [("# You're the pentester now.", DIM)]]),
         ("nmap -sV github.com/Khanh1916", [
             [("Starting Nmap against Cao Thanh Lam", SOFT)],
@@ -374,25 +301,32 @@ def session(compact, latest):
         ("ls ~/stack", stack_lines(compact)),
     ]
     per_line = 0.11
-    total = round(timeline_length(blocks, per_line) + 1)
+    settled = 2  # whoami and .plan are already on screen, so the window never opens empty
+    total = round(timeline_length(blocks[settled:], per_line) + 1)
     top = 44
     y = top + 28 - line_h
     parts, base, anim, moment = [], "", "", 0.5
     index = 0
-    for command, lines in blocks:
+    for number, (command, lines) in enumerate(blocks):
+        live = number >= settled
         y += line_h
-        row, row_base, row_anim, moment = command_line(index, x, y, command, size, total, moment)
-        parts.append(row)
-        base += row_base
-        anim += row_anim
-        index += 1
+        if live:
+            row, row_base, row_anim, moment = command_line(index, x, y, command, size, total, moment)
+            parts.append(row)
+            base += row_base
+            anim += row_anim
+            index += 1
+        else:
+            parts.append(runs(x, y, [("$ ", ACCENT), (command, TITLE)], size))
         for segments in lines:
             y += line_h
-            moment += per_line
+            if live:
+                moment += per_line
             if segments:
-                parts.append(runs(x, y, segments, size, f"l{index}"))
-                anim += shown_once(f"l{index}", moment, total)
-                index += 1
+                parts.append(runs(x, y, segments, size, f"l{index}" if live else ""))
+                if live:
+                    anim += shown_once(f"l{index}", moment, total)
+                    index += 1
     y += line_h
     prompt_x = x + 2 * size * CW
     last = runs(x, y, [("$ ", ACCENT)], size) + f'<rect class="bl" x="{prompt_x:.1f}" y="{y - size + 2}" width="{size * CW:.1f}" height="{size + 2}" fill="{TEXT}"/>'
@@ -859,11 +793,12 @@ def fetch_events(visible):
 
 def themed_link(href, stem, alt):
     """One link whose image follows the viewer's colour scheme (light is the fallback)."""
+    # One line on purpose: whitespace inside a link renders as a stray underlined space on GitHub.
     return (
-        f'  <a href="{href}"><picture>\n'
-        f'    <source media="(prefers-color-scheme: dark)" srcset="{RAW}/{stem}.svg">\n'
-        f'    <img src="{RAW}/{stem}-light.svg" alt="{alt}"/>\n'
-        f'  </picture></a>'
+        f'  <a href="{href}"><picture>'
+        f'<source media="(prefers-color-scheme: dark)" srcset="{RAW}/{stem}.svg">'
+        f'<img src="{RAW}/{stem}-light.svg" alt="{alt}"/>'
+        f'</picture></a>'
     )
 
 

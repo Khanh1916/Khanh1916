@@ -10,18 +10,8 @@
 </p>
 
 <p align="center">
-  <a href="mailto:southkhanh@gmail.com?subject=Hello%20from%20GitHub"><picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/btn-email.svg">
-    <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/btn-email-light.svg" alt="Email: southkhanh@gmail.com"/>
-  </picture></a>
-  <a href="https://www.facebook.com/n72khanh"><picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/btn-facebook.svg">
-    <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/btn-facebook-light.svg" alt="Facebook: n72khanh"/>
-  </picture></a>
-  <a href="https://github.com/sponsors/Khanh1916"><picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/btn-sponsor.svg">
-    <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/btn-sponsor-light.svg" alt="GitHub Sponsors"/>
-  </picture></a>
+  <a href="mailto:southkhanh@gmail.com?subject=Hello%20from%20GitHub"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/btn-email.svg"><img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/btn-email-light.svg" alt="Email: southkhanh@gmail.com"/></picture></a>
+  <a href="https://www.facebook.com/n72khanh"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/btn-facebook.svg"><img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/btn-facebook-light.svg" alt="Facebook: n72khanh"/></picture></a>
 </p>
 
 <p>
@@ -45,18 +35,9 @@
 <!-- findings:start -->
 
 <p align="center">
-  <a href="https://github.com/Khanh1916/oracle-sec-lab"><picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/card-oracle-sec-lab.svg">
-    <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/card-oracle-sec-lab-light.svg" alt="oracle-sec-lab: Student portal with deliberate Oracle and PHP vulnerabilities, for practicing database security and CTFs."/>
-  </picture></a>
-  <a href="https://github.com/Khanh1916/secbaseline"><picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/card-secbaseline.svg">
-    <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/card-secbaseline-light.svg" alt="secbaseline: Security hardening checks, compliance reports and drift detection for Linux, Windows, Cisco and Juniper."/>
-  </picture></a>
-  <a href="https://github.com/Khanh1916/PP-FedData"><picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/card-pp-feddata.svg">
-    <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/card-pp-feddata-light.svg" alt="PP-FedData: Privacy-preserving synthetic data for federated learning"/>
-  </picture></a>
+  <a href="https://github.com/Khanh1916/oracle-sec-lab"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/card-oracle-sec-lab.svg"><img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/card-oracle-sec-lab-light.svg" alt="oracle-sec-lab: Student portal with deliberate Oracle and PHP vulnerabilities, for practicing database security and CTFs."/></picture></a>
+  <a href="https://github.com/Khanh1916/secbaseline"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/card-secbaseline.svg"><img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/card-secbaseline-light.svg" alt="secbaseline: Security hardening checks, compliance reports and drift detection for Linux, Windows, Cisco and Juniper."/></picture></a>
+  <a href="https://github.com/Khanh1916/PP-FedData"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/card-pp-feddata.svg"><img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/card-pp-feddata-light.svg" alt="PP-FedData: Privacy-preserving synthetic data for federated learning"/></picture></a>
 </p>
 
 <!-- findings:end -->
@@ -102,18 +83,9 @@ solved it? write to southkhanh@gmail.com, subject: 31337
 </p>
 
 <p align="center">
-  <a href="https://github.com/sponsors/Khanh1916"><picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/btn-sponsor.svg">
-    <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/btn-sponsor-light.svg" alt="GitHub Sponsors"/>
-  </picture></a>
-  <a href="https://ko-fi.com/khanh1916"><picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/btn-kofi.svg">
-    <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/btn-kofi-light.svg" alt="Ko-fi"/>
-  </picture></a>
-  <a href="https://me.momo.vn/j8I5TbsbtxizUqtafoIKiv"><picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/btn-momo.svg">
-    <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/btn-momo-light.svg" alt="MoMo"/>
-  </picture></a>
+  <a href="https://github.com/sponsors/Khanh1916"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/btn-sponsor.svg"><img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/btn-sponsor-light.svg" alt="GitHub Sponsors"/></picture></a>
+  <a href="https://ko-fi.com/khanh1916"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/btn-kofi.svg"><img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/btn-kofi-light.svg" alt="Ko-fi"/></picture></a>
+  <a href="https://me.momo.vn/j8I5TbsbtxizUqtafoIKiv"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/btn-momo.svg"><img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/btn-momo-light.svg" alt="MoMo"/></picture></a>
 </p>
 
 <p>
