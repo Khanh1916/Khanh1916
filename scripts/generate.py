@@ -227,9 +227,8 @@ SERVICES = [
 
 
 PLAN = (
-    "I attack systems to learn how they fail, then build the tools that stop it happening again. "
-    "Lately I've been stuck on a harder question: how do you train an intrusion detector on traffic "
-    "nobody is allowed to see?"
+    "I write about the technology I work with: things I build, tools I explore and problems "
+    "I follow from the first command to the result."
 )
 
 
