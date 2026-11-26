@@ -172,46 +172,22 @@ def typed_once(name, x, y, chars, size, bg, total, start, duration):
     return body, base, anim
 
 
-# ---------------------------------------------------------------- hero
-
-def hero(compact):
-    """Name, role and the three themes: static, left aligned, one blinking cursor."""
-    w, h = (COMPACT_W, 300) if compact else (860, 262)
-    x = 20 if compact else 40
-    name, name_size, name_y, track = "CAO THANH LAM", 36 if compact else 52, 56 if compact else 76, 0.04
-    parts = [f'<rect x=".75" y=".75" width="{w - 1.5}" height="{h - 1.5}" rx="11" fill="{PANEL}" stroke="{BORDER}" stroke-width="1.5"/>']
-    parts.append(t(x, name_y, name, name_size, TITLE, True, track=track))
-    cursor_x = x + len(name) * name_size * (CW + track) + 6
-    parts.append(
-        f'<rect class="bl" x="{cursor_x:.1f}" y="{name_y - name_size * 0.74:.1f}" '
-        f'width="{name_size * 0.5:.1f}" height="{name_size * 0.78:.1f}" fill="{ACCENT}"/>'
-    )
-    if compact:
-        parts.append(t(x, 88, "Cybersecurity researcher", 15, TEXT))
-        parts.append(t(x, 110, "a.k.a. Nguyen Nam Khanh", 14, LED_SOFT))
-        rule_y = 128
-    else:
-        parts.append(runs(x, 112, [("Cybersecurity researcher", TEXT), ("  /  a.k.a. Nguyen Nam Khanh", LED_SOFT)], 17))
-        rule_y = 136
-    parts.append(f'<rect x="{x}" y="{rule_y}" width="{w - 2 * x}" height="1.5" fill="{LINE}"/>')
-    for i, (label, colour, sentence) in enumerate(HERO_COLUMNS):
-        if compact:
-            y = 158 + i * 48
-            parts.append(f'<rect x="{x}" y="{y - 9}" width="9" height="9" fill="{colour}"/>')
-            parts.append(t(x + 17, y, label, 13, colour, True))
-            parts.append(t(x, y + 22, sentence, 14))
-        else:
-            y = 172 + i * 31
-            parts.append(f'<rect x="{x}" y="{y - 10}" width="10" height="10" fill="{colour}"/>')
-            parts.append(t(x + 20, y, label, 16, colour, True))
-            parts.append(t(x + 120, y, sentence, 17))
-    anim = "@keyframes bl{50%{opacity:0}}.bl{animation:bl 1s steps(1,end) infinite}"
-    label = "Cao Thanh Lam, a.k.a. Nguyen Nam Khanh. Cybersecurity researcher: break systems to see how they fail, harden them and catch the drift, and learn from data without reading it."
-    comment = f"31337/tcp stage 2: {CTF_CIPHER}"
-    return svg(w, h, "".join(parts), "", anim, label, comment, fixed=False)
+def window_frame(w, h, title="cao-thanh-lam@kali: ~", menu=False, centred=False):
+    """A Kali terminal window: title bar with controls on the right, optionally the menu row."""
+    size, bar = 13, 62 if menu else 34
+    parts = [
+        f'<rect x=".75" y=".75" width="{w - 1.5}" height="{h - 1.5}" rx="11" fill="{PANEL}" stroke="{BORDER}" stroke-width="1.5"/>',
+        f'<path d="M1.5 {bar}V12Q1.5 1.5 12 1.5H{w - 12}Q{w - 1.5} 1.5 {w - 1.5} 12V{bar}z" fill="{BG}"/>',
+        f'<path d="M1 {bar}H{w - 1}" stroke="{BORDER}" stroke-width="1.5"/>',
+        t(w / 2 if centred else 20, 23, title, size, TEXT, True, "middle" if centred else "start"),
+        f'<path d="M{w - 82} 21h10M{w - 56} 13h9v9h-9zM{w - 30} 13l9 9M{w - 21} 13l-9 9" fill="none" stroke="{SOFT}" stroke-width="1.5"/>',
+    ]
+    if menu:
+        parts.append(t(20, 50, "File  Actions  Edit  View  Help", size, SOFT))
+    return "".join(parts)
 
 
-# ---------------------------------------------------------------- nmap terminal
+# ---------------------------------------------------------------- hero terminal
 
 SERVICES = [
     ("22/tcp", "open", "ssh", "Linux / Bash / PowerShell / hardening", "Linux / Bash / PowerShell"),
@@ -232,12 +208,14 @@ PLAN = (
 )
 
 
-def command_line(index, x, y, command, size, total, start):
-    """A prompt and a command that types itself. Returns (svg, base css, animation css, finished at)."""
-    prompt_x = x + 2 * size * CW
+def command_line(index, x, y, command, size, line_h, total, start):
+    """A Kali prompt at y and a command on the line below that types itself.
+
+    Returns (svg, base css, animation css, finished at)."""
+    command_x, command_y = x + 4 * size * CW, y + line_h
     duration = max(0.4, len(command) * 0.045)
-    row = runs(x, y, [("$ ", ACCENT)], size) + t(prompt_x, y, command, size, TITLE)
-    cover, base, anim = typed_once(f"c{index}", prompt_x, y, len(command), size, PANEL, total, start + 0.2, duration)
+    row = kali_prompt(x, y, size, line_h) + t(command_x, command_y, command, size, TITLE)
+    cover, base, anim = typed_once(f"c{index}", command_x, command_y, len(command), size, PANEL, total, start + 0.2, duration)
     anim += shown_once(f"g{index}", start, total)
     return f'<g class="g{index}">{row}</g>{cover}', base, anim, start + 0.2 + duration + 0.25
 
@@ -263,8 +241,47 @@ def stack_lines(compact):
     return rows
 
 
-def session(compact, latest):
-    """whoami, .plan, nmap and ls as one terminal window."""
+def kali_prompt(x, y, size, line_h):
+    """The two-line zsh prompt of Kali, without a command. The command starts four cells into line two."""
+    cell = size * CW
+    user = "cao-thanh-lam"
+    host_x = x + (4 + len(user)) * cell
+    first = (
+        t(x, y, "\u250c\u2500\u2500(", size, GREEN)
+        + t(x + 4 * cell, y, user, size, BLUE, True)
+        # The Kali separator is a wide glyph: give it two cells of its own.
+        + f'<text x="{host_x:.1f}" y="{y:.1f}" font-size="{size}" fill="{BLUE}" textLength="{2 * cell:.1f}" lengthAdjust="spacingAndGlyphs">\u327f</text>'
+        + runs(host_x + 2 * cell, y, [("kali", BLUE), (")-[", GREEN), ("~", TITLE), ("]", GREEN)], size)
+    )
+    second = runs(x, y + line_h, [("\u2514\u2500", GREEN), ("$", BLUE)], size)
+    return first + second
+
+
+def banner(compact, x):
+    """Name, role and the three themes, shown as the terminal's welcome text. Returns (svg, bottom y)."""
+    name_size, name_y = (32, 108) if compact else (44, 124)
+    parts = [t(x, name_y, "CAO THANH LAM", name_size, TITLE, True, track=0.04)]
+    if compact:
+        parts.append(t(x, 136, "Cybersecurity researcher", 14))
+        parts.append(t(x, 156, "a.k.a. Nguyen Nam Khanh", 13, LED_SOFT))
+    else:
+        parts.append(runs(x, 158, [("Cybersecurity researcher", TEXT), ("  /  a.k.a. Nguyen Nam Khanh", LED_SOFT)], 16))
+    y = 190
+    for label, colour, sentence in HERO_COLUMNS:
+        parts.append(f'<rect x="{x}" y="{y - 9}" width="9" height="9" fill="{colour}"/>')
+        if compact:
+            parts.append(t(x + 17, y, label, 13, colour, True))
+            parts.append(t(x, y + 20, sentence, 13))
+            y += 44
+        else:
+            parts.append(t(x + 20, y, label, 16, colour, True))
+            parts.append(t(x + 120, y, sentence, 16))
+            y += 27
+    return "".join(parts), y - (24 if compact else 27)
+
+
+def hero(compact, latest):
+    """The whole top of the page: one Kali terminal with the intro, whoami, .plan, nmap and ls."""
     w = COMPACT_W if compact else 860
     size, line_h, x = (13, 20, 20) if compact else (16, 23, 20)
     wrap = int((w - 2 * x) / (size * CW))
@@ -302,21 +319,23 @@ def session(compact, latest):
     per_line = 0.11
     settled = 2  # whoami and .plan are already on screen, so the window never opens empty
     total = round(timeline_length(blocks[settled:], per_line) + 1)
-    top = 44
-    y = top + 28 - line_h
-    parts, base, anim, moment = [], "", "", 0.5
+    intro, y = banner(compact, x)
+    cell = size * CW
+    gap = line_h // 2
+    parts, base, anim, moment = [intro], "", "", 0.5
     index = 0
+    y += gap
     for number, (command, lines) in enumerate(blocks):
         live = number >= settled
-        y += line_h
+        y += line_h + gap
         if live:
-            row, row_base, row_anim, moment = command_line(index, x, y, command, size, total, moment)
+            row, row_base, row_anim, moment = command_line(number, x, y, command, size, line_h, total, moment)
             parts.append(row)
             base += row_base
             anim += row_anim
-            index += 1
         else:
-            parts.append(runs(x, y, [("$ ", ACCENT), (command, TITLE)], size))
+            parts.append(kali_prompt(x, y, size, line_h) + t(x + 4 * cell, y + line_h, command, size, TITLE))
+        y += line_h
         for segments in lines:
             y += line_h
             if live:
@@ -326,36 +345,34 @@ def session(compact, latest):
                 if live:
                     anim += shown_once(f"l{index}", moment, total)
                     index += 1
+    y += line_h + gap
+    last = kali_prompt(x, y, size, line_h)
     y += line_h
-    prompt_x = x + 2 * size * CW
-    last = runs(x, y, [("$ ", ACCENT)], size) + f'<rect class="bl" x="{prompt_x:.1f}" y="{y - size + 2}" width="{size * CW:.1f}" height="{size + 2}" fill="{TEXT}"/>'
+    last += f'<rect class="bl" x="{x + 4 * cell:.1f}" y="{y - size + 2}" width="{cell:.1f}" height="{size + 2}" fill="{TEXT}"/>'
     parts.append(f'<g class="end">{last}</g>')
     anim += shown_once("end", moment + 0.2, total)
     anim += "@keyframes bl{50%{opacity:0}}.bl{animation:bl 1s steps(1,end) infinite}"
     h = y + 22
-    frame = [
-        f'<rect x=".75" y=".75" width="{w - 1.5}" height="{h - 1.5}" rx="11" fill="{PANEL}" stroke="{BORDER}" stroke-width="1.5"/>',
-        f'<path d="M1 {top}H{w - 1}" stroke="{BORDER}" stroke-width="1.5"/>',
-    ]
-    for i, colour in enumerate(("#ff5f57", "#febc2e", "#28c840")):  # macOS window controls
-        frame.append(f'<circle cx="{22 + i * 20}" cy="22" r="6" fill="{colour}"/>')
-    frame.append(t(w / 2, 27, "session: Khanh1916", 13, DIM, anchor="middle"))
     services = ", ".join(s[2] for s in SERVICES if s[1] == "open")
     names = "go, python, bash, powershell, php, sql, linux, docker, kubernetes, github-actions, mysql, oracle, pytorch, flower, opacus, scikit-learn, pandas, numpy"
-    label = f"A terminal session. whoami prints cao-thanh-lam. {PLAN} Contact: southkhanh@gmail.com. An nmap scan shows open services: {services}; port 31337 is filtered and marked flag. The stack directory lists {names}."
-    return svg(w, h, "".join(frame + parts), base, anim, label, fixed=False)
+    label = (
+        "Cao Thanh Lam, a.k.a. Nguyen Nam Khanh. Cybersecurity researcher: break systems to see how they fail, harden them and catch the drift, and learn from data without reading it. "
+        f"A Kali terminal session. whoami prints cao-thanh-lam. {PLAN} Contact: southkhanh@gmail.com. An nmap scan shows open services: {services}; port 31337 is filtered and marked flag. The stack directory lists {names}."
+    )
+    comment = f"31337/tcp stage 2: {CTF_CIPHER}"
+    return svg(w, h, window_frame(w, h, menu=True, centred=not compact) + "".join(parts), base, anim, label, comment, fixed=False)
 
 
 def command_panel(command, lines, compact, label):
-    """A single command and its output, framed like every other panel."""
+    """A single command and its output in its own Kali window."""
     w = COMPACT_W if compact else 860
-    size, line_h, x = (13, 20, 20) if compact else (16, 23, 20)
+    size, line_h, x = (13, 20, 14) if compact else (16, 23, 20)  # compact: the nuclei command needs 48 columns
     per_line = 0.15
     total = round(timeline_length([(command, lines)], per_line) + 1)
-    y = 32
-    parts, base, anim, moment = [], "", "", 0.5
-    row, base, anim, moment = command_line(0, x, y, command, size, total, moment)
-    parts.append(row)
+    y = 62
+    row, base, anim, moment = command_line(0, x, y, command, size, line_h, total, 0.5)
+    parts = [row]
+    y += line_h
     for i, segments in enumerate(lines):
         y += line_h
         moment += per_line
@@ -363,8 +380,7 @@ def command_panel(command, lines, compact, label):
             parts.append(runs(x, y, segments, size, f"l{i}"))
             anim += shown_once(f"l{i}", moment, total)
     h = y + 20
-    frame = f'<rect x=".75" y=".75" width="{w - 1.5}" height="{h - 1.5}" rx="11" fill="{PANEL}" stroke="{BORDER}" stroke-width="1.5"/>'
-    return svg(w, h, frame + "".join(parts), base, anim, label, fixed=False)
+    return svg(w, h, window_frame(w, h) + "".join(parts), base, anim, label, fixed=False)
 
 
 def nuclei_panel(compact, matches):
@@ -389,7 +405,7 @@ def support_panel(compact):
 
 # ---------------------------------------------------------------- finding cards
 
-CARD_W, CARD_H = 400, 263
+CARD_W, CARD_H, CARD_BAR = 400, 291, 28  # the layout below the title bar is 263 tall
 
 
 def summarize(text, width=44, max_lines=3):
@@ -417,7 +433,6 @@ def card(index, repo, tag, colour, body, base, anim):
     release = (repo.get("latestRelease") or {}).get("tagName")
     marker = f"{release}  F-{index:02d}" if release else f"F-{index:02d}"
     parts = [
-        f'<rect x=".75" y=".75" width="{CARD_W - 1.5}" height="{CARD_H - 1.5}" rx="11" fill="{PANEL}" stroke="{BORDER}" stroke-width="1.5"/>',
         f'<rect x="20" y="17" width="{len(tag) * 7.2 + 16:.1f}" height="20" rx="4" fill="{colour}" fill-opacity=".14"/>',
         t(28, 31, tag, 12, colour, True),
         t(CARD_W - 20, 31, marker, 12, DIM, anchor="end"),
@@ -429,7 +444,9 @@ def card(index, repo, tag, colour, body, base, anim):
         parts.append(t(20, 90 + i * 19, line, 13.5, SOFT))
     parts.append(f'<g transform="translate(0,19)">{body}</g>')
     parts.append(t(20, 248, languages[:50], 12, DIM))
-    return svg(CARD_W, CARD_H, "".join(parts), base, anim, f"{name}: {' '.join(lines)}")
+    content = f'<g transform="translate(0,{CARD_BAR})">{"".join(parts)}</g>'
+    frame = window_frame(CARD_W, CARD_H, f"~/findings/F-{index:02d}")
+    return svg(CARD_W, CARD_H, frame + content, base, anim, f"{name}: {' '.join(lines)}")
 
 
 def anim_languages(repo):
@@ -596,8 +613,8 @@ def activity(calendar, events, compact):
     for d in days:
         run = run + 1 if d["contributionCount"] else 0
         best = max(best, run)
-    parts = [runs(margin, 34, [("$ ", ACCENT), ("tcpdump -i github -n host Khanh1916", TITLE)], size)]
-    y = 34
+    parts = [kali_prompt(margin, 62, size, line_h), t(margin + 4 * size * CW, 62 + line_h, "tcpdump -i github -n host Khanh1916", size, TITLE)]
+    y = 62 + line_h
     rows = events or ["(no public packets captured)"]
     for event in rows:
         y += line_h
@@ -625,7 +642,7 @@ def activity(calendar, events, compact):
     grid_h = 7 * pitch
     parts.append(f'<rect class="bm" x="{margin - 3}" y="{y0 - 4:.1f}" width="2.5" height="{grid_h + 6:.1f}" fill="{FLASH}"/>')
     h = int(y0 + grid_h + 18)
-    frame = f'<rect x=".75" y=".75" width="{w - 1.5}" height="{h - 1.5}" rx="11" fill="{PANEL}" stroke="{BORDER}" stroke-width="1.5"/>'
+    frame = window_frame(w, h)
     base = ".f,.bm{opacity:0}"
     anim = (
         f"@keyframes f{{0%{{opacity:.92}}7%,100%{{opacity:0}}}}.f{{animation:f {duration}s linear infinite}}"
@@ -644,8 +661,8 @@ SIGNOFF = "You can’t trust code that you did not totally create yourself."
 def signoff(compact):
     w, size, width = (COMPACT_W, 16, 36) if compact else (860, 20, 80)
     lines = textwrap.wrap(SIGNOFF, width)
-    total, line_h, first_y = 14, size + 8, 68
-    parts = [t(w / 2, 32, "Connection to Khanh1916 closed.", 13, DIM, anchor="middle")]
+    total, line_h, first_y = 14, size + 8, 102
+    parts = [t(w / 2, 66, "Connection to Khanh1916 closed.", 13, DIM, anchor="middle")]
     base, anim, start, y, x = "", "", 2.2, first_y, 0.0
     marks, cell = [], size * CW
     for i, line in enumerate(lines):
@@ -660,7 +677,7 @@ def signoff(compact):
         marks.append((x, y, len(line), start, duration))
         start += duration
     h = y + 24
-    frame = f'<rect x=".75" y=".75" width="{w - 1.5}" height="{h - 1.5}" rx="11" fill="{PANEL}" stroke="{BORDER}" stroke-width="1.5"/>'
+    frame = window_frame(w, h)
     cursor_x = x + len(lines[-1]) * cell + 3
 
     def at(cx, cy):
@@ -685,14 +702,10 @@ def signoff(compact):
 
 # Brand glyphs from Simple Icons (CC0), on a 24x24 grid. MoMo is not in the set.
 BRAND_ICONS = {
-    "mail": "M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z",
-    "facebook": "M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z",
     "sponsors": "M17.625 1.499c-2.32 0-4.354 1.203-5.625 3.03-1.271-1.827-3.305-3.03-5.625-3.03C3.129 1.499 0 4.253 0 8.249c0 4.275 3.068 7.847 5.828 10.227a33.14 33.14 0 0 0 5.616 3.876l.028.017.008.003-.001.003c.163.085.342.126.521.125.179.001.358-.041.521-.125l-.001-.003.008-.003.028-.017a33.14 33.14 0 0 0 5.616-3.876C20.932 16.096 24 12.524 24 8.249c0-3.996-3.129-6.75-6.375-6.75zm-.919 15.275a30.766 30.766 0 0 1-4.703 3.316l-.004-.002-.004.002a30.955 30.955 0 0 1-4.703-3.316c-2.677-2.307-5.047-5.298-5.047-8.523 0-2.754 2.121-4.5 4.125-4.5 2.06 0 3.914 1.479 4.544 3.684.143.495.596.797 1.086.796.49.001.943-.302 1.085-.796.63-2.205 2.484-3.684 4.544-3.684 2.004 0 4.125 1.746 4.125 4.5 0 3.225-2.37 6.216-5.048 8.523z",
     "kofi": "M11.351 2.715c-2.7 0-4.986.025-6.83.26C2.078 3.285 0 5.154 0 8.61c0 3.506.182 6.13 1.585 8.493 1.584 2.701 4.233 4.182 7.662 4.182h.83c4.209 0 6.494-2.234 7.637-4a9.5 9.5 0 0 0 1.091-2.338C21.792 14.688 24 12.22 24 9.208v-.415c0-3.247-2.13-5.507-5.792-5.87-1.558-.156-2.65-.208-6.857-.208m0 1.947c4.208 0 5.09.052 6.571.182 2.624.311 4.13 1.584 4.13 4v.39c0 2.156-1.792 3.844-3.87 3.844h-.935l-.156.649c-.208 1.013-.597 1.818-1.039 2.546-.909 1.428-2.545 3.064-5.922 3.064h-.805c-2.571 0-4.831-.883-6.078-3.195-1.09-2-1.298-4.155-1.298-7.506 0-2.181.857-3.402 3.012-3.714 1.533-.233 3.559-.26 6.39-.26m6.547 2.287c-.416 0-.65.234-.65.546v2.935c0 .311.234.545.65.545 1.324 0 2.051-.754 2.051-2s-.727-2.026-2.052-2.026m-10.39.182c-1.818 0-3.013 1.48-3.013 3.142 0 1.533.858 2.857 1.949 3.897.727.701 1.87 1.429 2.649 1.896a1.47 1.47 0 0 0 1.507 0c.78-.467 1.922-1.195 2.623-1.896 1.117-1.039 1.974-2.364 1.974-3.897 0-1.662-1.247-3.142-3.039-3.142-1.065 0-1.792.545-2.338 1.298-.493-.753-1.246-1.298-2.312-1.298",
 }
 BUTTONS = {
-    "email": ("email", "25/tcp", "mail"),
-    "facebook": ("facebook", "443/tcp", "facebook"),
     "sponsor": ("sponsor", "443/tcp", "sponsors"),
     "kofi": ("ko-fi", "443/tcp", "kofi"),
     "momo": ("momo", "443/tcp", None),
@@ -825,10 +838,8 @@ def main():
     for theme, suffix in (("dark", ""), ("light", "-light")):
         apply_theme(theme)
         files.update({
-            f"hero{suffix}.svg": hero(False),
-            f"hero-compact{suffix}.svg": hero(True),
-            f"session{suffix}.svg": session(False, latest),
-            f"session-compact{suffix}.svg": session(True, latest),
+            f"hero{suffix}.svg": hero(False, latest),
+            f"hero-compact{suffix}.svg": hero(True, latest),
             f"nuclei{suffix}.svg": nuclei_panel(False, matches),
             f"nuclei-compact{suffix}.svg": nuclei_panel(True, matches),
             f"activity{suffix}.svg": activity(calendar, events, False),

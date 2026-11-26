@@ -5,21 +5,7 @@
   <source media="(prefers-color-scheme: dark) and (max-width: 600px)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/hero-compact.svg">
   <source media="(max-width: 600px)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/hero-compact-light.svg">
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/hero.svg">
-  <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/hero-light.svg" width="100%" alt="Cao Thanh Lam, a.k.a. Nguyen Nam Khanh. Cybersecurity researcher: break systems to see how they fail, harden them and catch the drift, and learn from data without reading it.">
-</picture>
-</p>
-
-<p align="center">
-  <a href="mailto:southkhanh@gmail.com?subject=Hello%20from%20GitHub"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/btn-email.svg"><img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/btn-email-light.svg" alt="Email: southkhanh@gmail.com"/></picture></a>
-  <a href="https://www.facebook.com/n72khanh"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/btn-facebook.svg"><img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/btn-facebook-light.svg" alt="Facebook: n72khanh"/></picture></a>
-</p>
-
-<p>
-<picture>
-  <source media="(prefers-color-scheme: dark) and (max-width: 600px)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/session-compact.svg">
-  <source media="(max-width: 600px)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/session-compact-light.svg">
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/session.svg">
-  <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/session-light.svg" width="100%" alt="A terminal session: whoami prints cao-thanh-lam, cat ~/.plan prints the bio, nmap lists open services, and ls ~/stack lists the tech stack.">
+  <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/hero-light.svg" width="100%" alt="Cao Thanh Lam, a.k.a. Nguyen Nam Khanh. Cybersecurity researcher: break systems to see how they fail, harden them and catch the drift, and learn from data without reading it. A Kali terminal session. whoami prints cao-thanh-lam. Notes on the technology at hand: things built, tools explored and problems followed from the first command to the result. Contact: southkhanh@gmail.com. An nmap scan shows open services: ssh, oracle-tns, mqtt, docker, mysql, ml-stack, kubernetes, flower; port 31337 is filtered and marked flag. The stack directory lists go, python, bash, powershell, php, sql, linux, docker, kubernetes, github-actions, mysql, oracle, pytorch, flower, opacus, scikit-learn, pandas, numpy.">
 </picture>
 </p>
 

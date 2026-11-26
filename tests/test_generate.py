@@ -22,7 +22,7 @@ import generate as g  # noqa: E402
 
 FEATURED = ["oracle-sec-lab", "secbaseline", "PP-FedData"]
 BUTTON_COUNT = len(g.BUTTONS)
-PER_THEME = 12 + BUTTON_COUNT + len(FEATURED)  # hero, session, nuclei, activity, support, signoff x2 sizes
+PER_THEME = 10 + BUTTON_COUNT + len(FEATURED)  # hero, nuclei, activity, support, signoff x2 sizes
 
 
 def fake_repo(name, pushed):
@@ -103,7 +103,7 @@ class PipelineTest(unittest.TestCase):
     def test_compact_panels_are_400_wide_and_nothing_overflows(self):
         ns = "{http://www.w3.org/2000/svg}"
         compact = [p for p in self.files if "-compact" in p.name]
-        self.assertEqual(len(compact), 2 * 6)
+        self.assertEqual(len(compact), 2 * 5)
         for path in compact:
             root = ET.fromstring(path.read_text(encoding="utf-8"))
             width = float(root.get("viewBox").split()[2])
