@@ -542,11 +542,12 @@ def anim_oracle(repo):
     body += runs(28, 152, [("> ", RED, True), (payload, TITLE)], 12)
     cover, base, anim = typed("pay", px, 152, len(payload), 12, BG, total, 3.8, 4.1, 2.2)
     body += cover
-    for i, (label, cx) in enumerate((("[+ C1:SQLI]", 20), ("[+ C2:LOGIC]", 134), ("[+ C3:SUPPLY]", 254))):
+    chips = (("[+C1:SQLI]", 20), ("[+C2:LOGIC]", 106.4), ("[+C3:SUPPLY]", 200), ("[+C4:PLSQL]", 300.8))
+    for i, (label, cx) in enumerate(chips):
         body += t(cx, 188, label, 12, SOFT)
         body += f'<g class="ch{i}">{t(cx, 188, label, 12, RED, True)}</g>'
-        anim += shown(f"ch{i}", 6.4 + i * 0.9, 9.6, total)
-    body += t(20, 216, "[*] status: 3 classes armed · CTF target ready", 12, SOFT)
+        anim += shown(f"ch{i}", 6.4 + i * 0.7, 9.6, total)
+    body += t(20, 216, f"[*] status: {len(chips)} classes armed · CTF target ready", 12, SOFT)
     return body, base, anim
 
 
@@ -573,7 +574,13 @@ def anim_secbaseline(repo):
             body += f'<rect class="dr" x="{cx}" y="{cy}" width="{cell}" height="{cell}" rx="1.5" fill="{RED}"/>'
     anim += "@keyframes qq{0%{fill:" + LED_OFF + "}4%,100%{fill:" + GRID + "}}.q{animation:qq 10s linear infinite}"
     y = y0 + ((controls + columns - 1) // columns) * (cell + gap) + 20
-    body += t(20, y, f"PASS [█████████████░] {controls - 3}/{controls}", 12, BLUE, True)
+    # The bar is drawn with rects: block glyphs differ in height from one fallback font to another.
+    prefix, slots = "PASS [", 14
+    bar_x, slot = 20 + len(prefix) * 12 * CW, 12 * CW
+    body += t(20, y, prefix, 12, BLUE, True)
+    body += f'<rect x="{bar_x:.1f}" y="{y - 9}" width="{(slots - 1) * slot:.1f}" height="10" fill="{BLUE}"/>'
+    body += f'<rect x="{bar_x + (slots - 1) * slot:.1f}" y="{y - 9}" width="{slot:.1f}" height="10" fill="{BLUE}" fill-opacity=".3"/>'
+    body += t(bar_x + slots * slot, y, f"] {controls - 3}/{controls}", 12, BLUE, True)
     body += f'<g class="dr">{t(380, y, "3 regressions", 12, RED, True, "end")}</g>'
     return body, base, anim
 
