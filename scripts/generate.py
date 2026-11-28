@@ -163,15 +163,21 @@ def panel_path(w, h, r_top=0, r_bot=0):
     return f"M.75 .75H{w - .75}V{h - .75}H.75z"
 
 
-def window_frame(w, h, title="cao-thanh-lam@kali: ~", menu=False, centred=False):
+def window_frame(w, h, title="cao-thanh-lam@kali: ~", menu=False):
     """Top Kali terminal window cap: rounded top corners, crisp 3px bottom corners."""
     size, bar = 13, 62 if menu else 34
     parts = [
         f'<path d="{panel_path(w, h, r_top=12, r_bot=3)}" fill="{PANEL}" stroke="{BORDER}" stroke-width="1.5"/>',
         f'<path d="M1.5 {bar}V12Q1.5 1.5 12 1.5H{w - 12}Q{w - 1.5} 1.5 {w - 1.5} 12V{bar}z" fill="{BG}"/>',
         f'<path d="M1 {bar}H{w - 1}" stroke="{BORDER}" stroke-width="1.5"/>',
-        t(w / 2 if centred else 20, 23, title, size, TEXT, True, "middle" if centred else "start"),
-        f'<path d="M{w - 82} 21h10M{w - 56} 13h9v9h-9zM{w - 30} 13l9 9M{w - 21} 13l-9 9" fill="none" stroke="{SOFT}" stroke-width="1.5"/>',
+        t(w / 2, 23, title, size, TEXT, True, "middle"),
+        # Xfce window as Kali ships it: terminal icon on the left, round buttons with a blue close on the right.
+        f'<rect x="18" y="11" width="16" height="14" rx="2.5" fill="{PANEL}" stroke="{SOFT}" stroke-width="1.2"/>',
+        f'<path d="M21.5 15l3 3-3 3M26.5 21.5h4" fill="none" stroke="{SOFT}" stroke-width="1.2"/>',
+        f'<circle cx="{w - 68}" cy="18" r="7.5" fill="{LINE}"/><circle cx="{w - 45}" cy="18" r="7.5" fill="{LINE}"/>',
+        f'<circle cx="{w - 22}" cy="18" r="7.5" fill="{BLUE}"/>',
+        f'<path d="M{w - 71.5} 20.5h7M{w - 48} 15h6v6h-6z" fill="none" stroke="{TITLE}" stroke-width="1.2"/>',
+        f'<path d="M{w - 25} 15l6 6M{w - 19} 15l-6 6" fill="none" stroke="{PANEL}" stroke-width="1.6"/>',
     ]
     if menu:
         parts.append(t(20, 50, "File  Actions  Edit  View  Help", size, SOFT))
