@@ -5,7 +5,7 @@
   <source media="(prefers-color-scheme: dark) and (max-width: 600px)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/hero-compact.svg">
   <source media="(max-width: 600px)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/hero-compact-light.svg">
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/hero.svg">
-  <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/hero-light.svg" width="100%" alt="Cao Thanh Lam, a.k.a. Nguyen Nam Khanh. Cybersecurity researcher: break systems to see how they fail, harden them and catch the drift, and learn from data without reading it. A Kali terminal running msfconsole with an NK monogram banner. Notes on the technology at hand: things built, tools explored and problems followed from the first command to the result. Contact: southkhanh@gmail.com. The service table lists open services: ssh, oracle-tns, mqtt, docker, mysql, ml-stack, kubernetes, flower. The stack directory lists go, python, bash, powershell, php, sql, linux, docker, kubernetes, github-actions, mysql, oracle, pytorch, flower, opacus, scikit-learn, pandas, numpy.">
+  <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/hero-light.svg" width="100%" alt="Cao Thanh Lam, a.k.a. Nguyen Nam Khanh. Cybersecurity researcher: break systems to see how they fail, harden them and catch the drift, and learn from data without reading it. A Kali terminal running msfconsole with an NK monogram banner. Notes on the technology at hand: things built, tools explored and problems followed from the first command to the result. Contact: southkhanh@gmail.com. The service table lists open services: ssh, oracle-tns, mqtt, docker, mysql, ml-stack, kubernetes, flower. The stack directory lists go, python, bash, powershell, php, sql, linux, docker, kubernetes, github-actions, mysql, oracle, pytorch, flower, opacus, scikit-learn, pandas, numpy." align="top">
 </picture>
 </div>
 <div>
@@ -13,7 +13,7 @@
   <source media="(prefers-color-scheme: dark) and (max-width: 600px)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/nuclei-compact.svg">
   <source media="(max-width: 600px)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/nuclei-compact-light.svg">
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/nuclei.svg">
-  <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/nuclei-light.svg" width="100%" alt="msfconsole module search of this profile, with the matching project modules shown below.">
+  <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/nuclei-light.svg" width="100%" alt="msfconsole module search of this profile, with the matching project modules shown below." align="top">
 </picture>
 </div>
 
@@ -30,7 +30,7 @@
   <source media="(prefers-color-scheme: dark) and (max-width: 600px)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/activity-compact.svg">
   <source media="(max-width: 600px)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/activity-compact-light.svg">
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/activity.svg">
-  <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/activity-light.svg" width="100%" alt="tcpdump output of recent public GitHub events and a contribution map. Refreshed by GitHub Actions.">
+  <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/activity-light.svg" width="100%" alt="tcpdump output of recent public GitHub events and a contribution map. Refreshed by GitHub Actions." align="top">
 </picture>
 </div>
 <div>
@@ -38,6 +38,6 @@
   <source media="(prefers-color-scheme: dark) and (max-width: 600px)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/signoff-compact.svg">
   <source media="(max-width: 600px)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/signoff-compact-light.svg">
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/signoff.svg">
-  <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/signoff-light.svg" width="100%" alt="Exiting msfconsole to Kali shell and running cat ~/.trust: You can’t trust code that you did not totally create yourself.">
+  <img src="https://raw.githubusercontent.com/Khanh1916/Khanh1916/main/assets/signoff-light.svg" width="100%" alt="Exiting msfconsole to Kali shell and running cat ~/.trust: You can’t trust code that you did not totally create yourself." align="top">
 </picture>
 </div>

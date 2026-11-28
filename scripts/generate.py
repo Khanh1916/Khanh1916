@@ -153,21 +153,23 @@ def typed(name, x, y, chars, size, bg, total, clear_at, start, duration):
 
 
 def panel_path(w, h, r_top=0, r_bot=0):
-    """SVG path for a full-width panel with independent top and bottom corner radii."""
+    """Outline of one slice of the window. An edge is only drawn where the window itself ends (radius > 0)."""
+    top = f"V{r_top}Q.75 .75 {r_top} .75H{w - r_top}Q{w - .75} .75 {w - .75} {r_top}" if r_top else ""
+    bottom = f"V{h - r_bot}Q{w - .75} {h - .75} {w - r_bot} {h - .75}H{r_bot}Q.75 {h - .75} .75 {h - r_bot}" if r_bot else ""
     if r_top and r_bot:
-        return f"M{r_top} .75H{w - r_top}Q{w - .75} .75 {w - .75} {r_top}V{h - r_bot}Q{w - .75} {h - .75} {w - r_bot} {h - .75}H{r_bot}Q.75 {h - .75} .75 {h - r_bot}V{r_top}Q.75 .75 {r_top} .75z"
+        return f"M.75 {h - r_bot}{top}{bottom}z"
     if r_top:
-        return f"M.75 {h - .75}V{r_top}Q.75 .75 {r_top} .75H{w - r_top}Q{w - .75} .75 {w - .75} {r_top}V{h - .75}z"
+        return f"M.75 {h}{top}V{h}"
     if r_bot:
-        return f"M.75 .75H{w - .75}V{h - r_bot}Q{w - .75} {h - .75} {w - r_bot} {h - .75}H{r_bot}Q.75 {h - .75} .75 {h - r_bot}z"
-    return f"M.75 .75H{w - .75}V{h - .75}H.75z"
+        return f"M{w - .75} 0{bottom}V0"
+    return f"M.75 0V{h}M{w - .75} 0V{h}"
 
 
 def window_frame(w, h, title="cao-thanh-lam@kali: ~", menu=False):
-    """Top Kali terminal window cap: rounded top corners, crisp 3px bottom corners."""
+    """Top Kali terminal window cap: rounded top corners, open at the bottom into the next slice."""
     size, bar = 13, 62 if menu else 34
     parts = [
-        f'<path d="{panel_path(w, h, r_top=12, r_bot=3)}" fill="{PANEL}" stroke="{BORDER}" stroke-width="1.5"/>',
+        f'<path d="{panel_path(w, h, r_top=12)}" fill="{PANEL}" stroke="{BORDER}" stroke-width="1.5"/>',
         f'<path d="M1.5 {bar}V12Q1.5 1.5 12 1.5H{w - 12}Q{w - 1.5} 1.5 {w - 1.5} 12V{bar}z" fill="{BG}"/>',
         f'<path d="M1 {bar}H{w - 1}" stroke="{BORDER}" stroke-width="1.5"/>',
         t(w / 2, 23, title, size, TEXT, True, "middle"),
@@ -184,9 +186,12 @@ def window_frame(w, h, title="cao-thanh-lam@kali: ~", menu=False):
     return "".join(parts)
 
 
-def panel_frame(w, h, r_top=3, r_bot=3):
-    """Terminal session slice with matching subtle seam corners or bottom window cap."""
-    return f'<path d="{panel_path(w, h, r_top=r_top, r_bot=r_bot)}" fill="{PANEL}" stroke="{BORDER}" stroke-width="1.5"/>'
+def panel_frame(w, h, r_bot=0):
+    """A slice of the terminal below the title bar: side edges only, plus the window's bottom when `r_bot` is set."""
+    # The fill is its own rect: filling an open outline would paint a wedge between two separate side edges.
+    fill = "" if r_bot else f'<rect width="{w}" height="{h}" fill="{PANEL}"/>'
+    paint = PANEL if r_bot else "none"
+    return fill + f'<path d="{panel_path(w, h, r_bot=r_bot)}" fill="{paint}" stroke="{BORDER}" stroke-width="1.5"/>'
 
 
 # ---------------------------------------------------------------- hero terminal
@@ -211,12 +216,19 @@ PLAN = (
 
 def msf_prompt(x, y, size, module=None):
     """Single-line Metasploit console prompt, returning (svg, command_x)."""
-    segs = [("msf6 ", RED, True)]
+    segs = [("msf6", TEXT), (" ", TEXT)]
     if module:
-        segs += [("auxiliary(", TEXT), (module, BLUE), (") ", TEXT)]
+        segs += [("auxiliary(", TEXT), (module, RED, True), (") ", TEXT)]
     segs.append(("> ", TEXT))
     cmd_x = x + sum(len(s[0]) for s in segs) * size * CW
-    return runs(x, y, segs, size), cmd_x
+    # Metasploit underlines the program name. A drawn line keeps its width exact in any font.
+    underline = f'<path d="M{x} {y + 3}h{4 * size * CW:.1f}" stroke="{TEXT}" stroke-width="1"/>'
+    return underline + runs(x, y, segs, size), cmd_x
+
+
+def exec_notice(command):
+    """What msfconsole prints before handing an unknown command to the shell."""
+    return [("[*]", BLUE, True), (f" exec: {command}", TEXT)]
 
 
 def stack_lines(compact):
@@ -363,10 +375,12 @@ def hero(compact, latest, matches=3):
         else:
             table.append([(f"{port:<11}", LED_SOFT), (f"{state:<10}", colour), (f"{service:<13}", TEXT), (long_text, ACCENT if hidden else SOFT)])
 
-    port_mod = "scanner/portscan" if compact else "scanner/portscan/khanh1916"
+    # The module context does not fit beside the command on a phone, so only the wide layout shows it.
+    port_mod = None if compact else "scanner/portscan/khanh1916"
+    scan = "nmap -sV khanh1916"
     blocks = [
         ("cat ~/.plan", [[(line, TEXT)] for line in textwrap.wrap(PLAN, wrap)] + [[], [("# You're the pentester now.", DIM)]], None),
-        ("services", [
+        (scan, [
             *wrapped("Starting service inventory for Cao Thanh Lam", SOFT),
             *wrapped(f"Host is up. Latest push: {latest}", SOFT),
             [],
@@ -392,7 +406,7 @@ def hero(compact, latest, matches=3):
         y += line_h + gap
         prompt_svg, cmd_x = msf_prompt(x, y, size, module=module)
         parts.append(prompt_svg + t(cmd_x, y, command, size, TITLE))
-        for segments in lines:
+        for segments in [exec_notice(command), [], *lines]:
             if segments:
                 y += line_h
                 parts.append(runs(x, y, segments, size))
@@ -509,10 +523,11 @@ def card(index, repo, tag, colour, body, base, anim, compact=True):
         parts.append(t(444, 32, f"★ {stars}", 13.5, ACCENT, anchor="end"))
     for i, line in enumerate(lines):
         parts.append(t(20, 60 + i * 20, line, 14, TEXT))
-    use_segs = [("msf6 ", RED, True), ("> ", TEXT), (f"use {mod_idx}", BLUE)]
+    prompt_svg, cmd_x = msf_prompt(20, 146, 13)
+    use_segs = [(f"use {mod_idx}", BLUE)]
     if langs:
         use_segs.append((f"  # {langs}", DIM))
-    parts.append(runs(20, 146, use_segs, 13))
+    parts.append(prompt_svg + runs(cmd_x, 146, use_segs, 13))
     parts.append(f'<path d="M460 16V152" stroke="{BORDER}" stroke-width="1"/>')
     parts.append(f'<g transform="translate(460,-84)">{body}</g>')
     frame = panel_frame(CARD_DESKTOP_W, CARD_DESKTOP_H)
@@ -709,8 +724,9 @@ def activity(calendar, events, compact):
         run = run + 1 if d["contributionCount"] else 0
         best = max(best, run)
     prompt_svg, cmd_x = msf_prompt(margin, 34, size)
-    parts = [prompt_svg, t(cmd_x, 34, "tcpdump -i github -n host Khanh1916", size, TITLE)]
-    y = 40
+    command = "tcpdump -i github -n host Khanh1916"
+    parts = [prompt_svg, t(cmd_x, 34, command, size, TITLE), runs(margin, 34 + line_h, exec_notice(command), size)]
+    y = 42 + line_h
     rows = events or ["(no public packets captured)"]
     for event in rows:
         y += line_h
@@ -867,7 +883,7 @@ def themed_link(href, stem, alt):
         f'<source media="(prefers-color-scheme: dark) and (max-width: 600px)" srcset="{RAW}/{stem}-compact.svg">'
         f'<source media="(max-width: 600px)" srcset="{RAW}/{stem}-compact-light.svg">'
         f'<source media="(prefers-color-scheme: dark)" srcset="{RAW}/{stem}.svg">'
-        f'<img src="{RAW}/{stem}-light.svg" width="100%" alt="{alt}"/>'
+        f'<img src="{RAW}/{stem}-light.svg" width="100%" alt="{alt}" align="top"/>'
         f'</picture></a></div>'
     )
 
