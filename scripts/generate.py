@@ -488,6 +488,13 @@ def summarize(text, width=44, max_lines=3):
     return lines
 
 
+def use_line(y, index, langs):
+    """The `msf6 > use N` line of a module card, with the repo's languages as a comment."""
+    prompt_svg, cmd_x = msf_prompt(20, y, 13)
+    segs = [(f"use {index}", BLUE)] + ([(f"  # {langs}", DIM)] if langs else [])
+    return prompt_svg + runs(cmd_x, y, segs, 13)
+
+
 def card(index, repo, tag, colour, body, base, anim, compact=True):
     """One msfconsole module entry showing description, language use command, and TUI telemetry."""
     name, stars = repo["name"], repo["stargazerCount"]
@@ -499,7 +506,7 @@ def card(index, repo, tag, colour, body, base, anim, compact=True):
 
     if compact:
         lines = summarize(repo.get("description"), width=44, max_lines=3) or ["No description yet."]
-        langs = fit_langs(edges, 36)
+        langs = fit_langs(edges, 30)  # the prompt leaves 30 of the 46 columns for languages
         parts = [
             runs(20, 28, [(mod_prefix, DIM), (mod_ns, colour), (name, TITLE, True)], 13),
         ]
@@ -509,7 +516,7 @@ def card(index, repo, tag, colour, body, base, anim, compact=True):
             parts.append(t(20, 52 + i * 18, line, 13.5, SOFT))
         parts.append(f'<path d="M20 106H{CARD_W - 20}" stroke="{BORDER}" stroke-width="1"/>')
         parts.append(f'<g transform="translate(0,4)">{body}</g>')
-        parts.append(runs(20, 246, [(f"use {mod_idx}", BLUE), (f"  # {langs}", DIM)] if langs else [(f"use {mod_idx}", BLUE)], 13))
+        parts.append(use_line(246, mod_idx, langs))
         frame = panel_frame(CARD_W, CARD_H)
         return svg(CARD_W, CARD_H, frame + "".join(parts), base, anim, f"{name}: {' '.join(lines)}", fixed=False)
 
@@ -523,11 +530,7 @@ def card(index, repo, tag, colour, body, base, anim, compact=True):
         parts.append(t(444, 32, f"★ {stars}", 13.5, ACCENT, anchor="end"))
     for i, line in enumerate(lines):
         parts.append(t(20, 60 + i * 20, line, 14, TEXT))
-    prompt_svg, cmd_x = msf_prompt(20, 146, 13)
-    use_segs = [(f"use {mod_idx}", BLUE)]
-    if langs:
-        use_segs.append((f"  # {langs}", DIM))
-    parts.append(prompt_svg + runs(cmd_x, 146, use_segs, 13))
+    parts.append(use_line(146, mod_idx, langs))
     parts.append(f'<path d="M460 16V152" stroke="{BORDER}" stroke-width="1"/>')
     parts.append(f'<g transform="translate(460,-84)">{body}</g>')
     frame = panel_frame(CARD_DESKTOP_W, CARD_DESKTOP_H)
