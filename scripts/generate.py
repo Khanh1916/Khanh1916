@@ -53,7 +53,7 @@ THEMES = {
     "light": {
         "BG": "#e7ebf1", "PANEL": "#f4f6f9", "BORDER": "#cfd6e0", "LINE": "#bcc6d3", "LED_OFF": "#e1e6ed",
         "TEXT": "#1f2933", "TITLE": "#0e141b", "GRID": "#5b6b80", "FLASH": "#0e141b", "SOFT": "#4f5d6e",
-        "DIM": "#5d6c82", "LED_SOFT": "#5b6b80", "RED": "#c5301f", "BLUE": "#1c5fc4", "GREEN": "#127a4a",
+        "DIM": "#5d6c82", "LED_SOFT": "#5b6b80", "RED": "#b82818", "BLUE": "#1c5fc4", "GREEN": "#0f6d41",
         "ACCENT": "#1f2a37", "HEAT": ("#c9d2de", "#8f9dae", "#4f5d6e", "#1f2a37"),
     },
 }
@@ -98,11 +98,13 @@ def t(x, y, s, size, fill=None, bold=False, anchor="start", track=0.0, cls=""):
 
 
 def runs(x, y, segments, size, cls=""):
-    """Several coloured runs on one line, placed by character count."""
+    """Several coloured (and optionally bold) runs on one line, placed by character count."""
     parts, cursor = [], x
-    for text, colour in segments:
+    for segment in segments:
+        text, colour, *rest = segment
+        bold = bool(rest and rest[0])
         if text.strip():
-            parts.append(t(cursor, y, text, size, colour))
+            parts.append(t(cursor, y, text, size, colour, bold=bold))
         cursor += len(text) * size * CW
     inner = "".join(parts)
     return f'<g class="{cls}">{inner}</g>' if cls else inner
@@ -131,52 +133,41 @@ def shown(name, on, off, total):
     )
 
 
-def typed(name, x, y, chars, size, bg, total, start, duration, end):
-    """Typewriter reveal: a clipped cover slides right in character-sized steps."""
+def typed(name, x, y, chars, size, bg, total, clear_at, start, duration):
+    """Typewriter reveal that starts visible at t=0, clears cleanly, and re-types in character steps."""
     length = chars * size * CW + 2
     top, height = y - size, size * 1.35
-    a, b, c = (v / total * 100 for v in (start, start + duration, end))
+    a, b, c = (v / total * 100 for v in (clear_at, start, start + duration))
     body = (
         f'<clipPath id="{name}c"><rect x="{x}" y="{top:.1f}" width="{length:.1f}" height="{height:.1f}"/></clipPath>'
         f'<g clip-path="url(#{name}c)"><rect class="{name}" x="{x}" y="{top:.1f}" width="{length:.1f}" height="{height:.1f}" fill="{bg}"/></g>'
     )
     base = f".{name}{{transform:translateX({length:.1f}px)}}"
     anim = (
-        f"@keyframes {name}{{0%,{a:.3f}%{{transform:translateX(0);animation-timing-function:steps({chars},end)}}"
-        f"{b:.3f}%{{transform:translateX({chars * size * CW:.1f}px)}}{b + 0.02:.3f}%,{c:.3f}%{{transform:translateX({length:.1f}px)}}"
-        f"{c + 0.02:.3f}%,100%{{transform:translateX(0)}}}}"
+        f"@keyframes {name}{{0%,{(a - 0.5):.3f}%{{transform:translateX({length:.1f}px)}}"
+        f"{a:.3f}%,{b:.3f}%{{transform:translateX(0);animation-timing-function:steps({chars},end)}}"
+        f"{c:.3f}%,100%{{transform:translateX({length:.1f}px)}}}}"
         f".{name}{{animation:{name} {total}s linear infinite}}"
     )
     return body, base, anim
 
 
-def shown_once(name, on, total):
-    """Hidden until `on`, then stays: terminal output does not vanish."""
-    a = on / total * 100
-    return (
-        f"@keyframes {name}{{0%,{a:.3f}%{{opacity:0}}{a + 0.02:.3f}%,100%{{opacity:1}}}}"
-        f".{name}{{animation:{name} {total}s linear 1 forwards}}"
-    )
-
-
-def typed_once(name, x, y, chars, size, bg, total, start, duration):
-    """Typewriter reveal that plays once and leaves the text on screen."""
-    body, base, _ = typed(name, x, y, chars, size, bg, total, start, duration, total)
-    length = chars * size * CW + 2
-    a, b = start / total * 100, (start + duration) / total * 100
-    anim = (
-        f"@keyframes {name}{{0%,{a:.3f}%{{transform:translateX(0);animation-timing-function:steps({chars},end)}}"
-        f"{b:.3f}%{{transform:translateX({chars * size * CW:.1f}px)}}{b + 0.02:.3f}%,100%{{transform:translateX({length:.1f}px)}}}}"
-        f".{name}{{animation:{name} {total}s linear 1 forwards}}"
-    )
-    return body, base, anim
+def panel_path(w, h, r_top=0, r_bot=0):
+    """SVG path for a full-width panel with independent top and bottom corner radii."""
+    if r_top and r_bot:
+        return f"M{r_top} .75H{w - r_top}Q{w - .75} .75 {w - .75} {r_top}V{h - r_bot}Q{w - .75} {h - .75} {w - r_bot} {h - .75}H{r_bot}Q.75 {h - .75} .75 {h - r_bot}V{r_top}Q.75 .75 {r_top} .75z"
+    if r_top:
+        return f"M.75 {h - .75}V{r_top}Q.75 .75 {r_top} .75H{w - r_top}Q{w - .75} .75 {w - .75} {r_top}V{h - .75}z"
+    if r_bot:
+        return f"M.75 .75H{w - .75}V{h - r_bot}Q{w - .75} {h - .75} {w - r_bot} {h - .75}H{r_bot}Q.75 {h - .75} .75 {h - r_bot}z"
+    return f"M.75 .75H{w - .75}V{h - .75}H.75z"
 
 
 def window_frame(w, h, title="cao-thanh-lam@kali: ~", menu=False, centred=False):
-    """A Kali terminal window: title bar with controls on the right, optionally the menu row."""
+    """Top Kali terminal window cap: rounded top corners, crisp 3px bottom corners."""
     size, bar = 13, 62 if menu else 34
     parts = [
-        f'<rect x=".75" y=".75" width="{w - 1.5}" height="{h - 1.5}" rx="11" fill="{PANEL}" stroke="{BORDER}" stroke-width="1.5"/>',
+        f'<path d="{panel_path(w, h, r_top=12, r_bot=3)}" fill="{PANEL}" stroke="{BORDER}" stroke-width="1.5"/>',
         f'<path d="M1.5 {bar}V12Q1.5 1.5 12 1.5H{w - 12}Q{w - 1.5} 1.5 {w - 1.5} 12V{bar}z" fill="{BG}"/>',
         f'<path d="M1 {bar}H{w - 1}" stroke="{BORDER}" stroke-width="1.5"/>',
         t(w / 2 if centred else 20, 23, title, size, TEXT, True, "middle" if centred else "start"),
@@ -185,6 +176,11 @@ def window_frame(w, h, title="cao-thanh-lam@kali: ~", menu=False, centred=False)
     if menu:
         parts.append(t(20, 50, "File  Actions  Edit  View  Help", size, SOFT))
     return "".join(parts)
+
+
+def panel_frame(w, h, r_top=3, r_bot=3):
+    """Terminal session slice with matching subtle seam corners or bottom window cap."""
+    return f'<path d="{panel_path(w, h, r_top=r_top, r_bot=r_bot)}" fill="{PANEL}" stroke="{BORDER}" stroke-width="1.5"/>'
 
 
 # ---------------------------------------------------------------- hero terminal
@@ -198,7 +194,7 @@ SERVICES = [
     ("6006/tcp", "open", "ml-stack", "PyTorch / scikit-learn / pandas / NumPy", "PyTorch / scikit / pandas"),
     ("6443/tcp", "open", "kubernetes", "Kubernetes / multi-tenant labs", "Kubernetes"),
     ("9092/tcp", "open", "flower", "Flower / Opacus / DP / SecAgg+", "Flower / Opacus / SecAgg+"),
-    ("31337/tcp", "filtered", "flag?", "see the end of this page", "see the end of this page"),
+    ("31337/tcp", "filtered", "flag?", "filtered (no route)", "filtered"),
 ]
 
 
@@ -208,23 +204,14 @@ PLAN = (
 )
 
 
-def command_line(index, x, y, command, size, line_h, total, start):
-    """A Kali prompt at y and a command on the line below that types itself.
-
-    Returns (svg, base css, animation css, finished at)."""
-    command_x, command_y = x + 4 * size * CW, y + line_h
-    duration = max(0.4, len(command) * 0.045)
-    row = kali_prompt(x, y, size, line_h) + t(command_x, command_y, command, size, TITLE)
-    cover, base, anim = typed_once(f"c{index}", command_x, command_y, len(command), size, PANEL, total, start + 0.2, duration)
-    anim += shown_once(f"g{index}", start, total)
-    return f'<g class="g{index}">{row}</g>{cover}', base, anim, start + 0.2 + duration + 0.25
-
-
-def timeline_length(blocks, per_line):
-    moment = 0.5
-    for command, lines in blocks:
-        moment += 0.2 + max(0.4, len(command) * 0.045) + 0.25 + len(lines) * per_line
-    return moment
+def msf_prompt(x, y, size, module=None):
+    """Single-line Metasploit console prompt, returning (svg, command_x)."""
+    segs = [("msf6 ", RED, True)]
+    if module:
+        segs += [("auxiliary(", TEXT), (module, BLUE), (") ", TEXT)]
+    segs.append(("> ", TEXT))
+    cmd_x = x + sum(len(s[0]) for s in segs) * size * CW
+    return runs(x, y, segs, size), cmd_x
 
 
 def stack_lines(compact):
@@ -257,34 +244,102 @@ def kali_prompt(x, y, size, line_h):
     return first + second
 
 
-def banner(compact, x):
-    """Name, role and the three themes, shown as the terminal's welcome text. Returns (svg, bottom y)."""
-    name_size, name_y = (32, 108) if compact else (44, 124)
-    parts = [t(x, name_y, "CAO THANH LAM", name_size, TITLE, True, track=0.04)]
+NK_MONOGRAM_DESKTOP = (
+    "▀▀█▄     ▀▀█▀▀      ",
+    "  █▀▄      █        ",
+    "  █ ▀▄     █  ▀▀█▀▀ ",
+    "  █  ▀▄    █   ▄▀   ",
+    "  █   ▀▄   █ ▄▀     ",
+    "▄▄█▄▄  ▀▄  █ ▀▄     ",
+    "       █▀█    ▀▄    ",
+    "      ▄▄█▄▄   ▄▄█▄▄ ",
+)
+NK_MONOGRAM_COMPACT = (
+    "▀▀█▄  ▀▀█▀▀      ",
+    "  █▀▄   █  ▀▀█▀▀ ",
+    "  █ ▀▄  █ ▄▀     ",
+    "▄▄█▄▄▀▄ █  ▀▄    ",
+    "     ▄▄█▄▄ ▄▄█▄  ",
+)
+
+
+def monogram_splash(x, y, size, line_h, art):
+    """Interlocking NK ASCII monogram with a calm Kali-blue phosphor scan sweep."""
+    parts = [t(x, y + row * line_h, line, size, TITLE) for row, line in enumerate(art)]
+    beam_lines = "".join(t(x, y + row * line_h, line, size, BLUE) for row, line in enumerate(art))
+    art_w = len(art[0]) * size * CW
+    art_h = len(art) * line_h + 6
+    parts.append(
+        f'<clipPath id="nkc"><rect class="nkb" x="{x:.1f}" y="{y - size:.1f}" width="44" height="{art_h:.1f}"/></clipPath>'
+        f'<g class="nkg" clip-path="url(#nkc)">{beam_lines}</g>'
+    )
+    base = ".nkg{opacity:0}"
+    anim = (
+        ".nkg{opacity:.92}"
+        f"@keyframes nkb{{0%{{transform:translateX(-50px)}}55%,100%{{transform:translateX({art_w + 15:.1f}px)}}}}"
+        ".nkb{animation:nkb 4.5s ease-in-out infinite}"
+    )
+    return "".join(parts), base, anim
+
+
+def msf_box_row(x, y, size, segments, total_width=52, close_colour=None, close_bold=False):
+    """Draw a Metasploit banner row with the closing bracket pinned to an exact column."""
+    close_x = x + (total_width - 1) * size * CW
+    return runs(x, y, segments, size) + t(close_x, y, "]", size, close_colour or DIM, bold=close_bold)
+
+
+def banner(compact, x, y, matches):
+    """NK ASCII monogram paired with a Metasploit banner statistics block."""
     if compact:
-        parts.append(t(x, 136, "Cybersecurity researcher", 14))
-        parts.append(t(x, 156, "a.k.a. Nguyen Nam Khanh", 13, LED_SOFT))
-    else:
-        parts.append(runs(x, 158, [("Cybersecurity researcher", TEXT), ("  /  a.k.a. Nguyen Nam Khanh", LED_SOFT)], 16))
-    y = 190
-    for label, colour, sentence in HERO_COLUMNS:
-        parts.append(f'<rect x="{x}" y="{y - 9}" width="9" height="9" fill="{colour}"/>')
-        if compact:
-            parts.append(t(x + 17, y, label, 13, colour, True))
-            parts.append(t(x, y + 20, sentence, 13))
-            y += 44
-        else:
-            parts.append(t(x + 20, y, label, 16, colour, True))
-            parts.append(t(x + 120, y, sentence, 16))
-            y += 27
-    return "".join(parts), y - (24 if compact else 27)
+        size, line_h = 13, 19
+        parts = []
+        art_svg, base, anim = monogram_splash(x, y, size, line_h, NK_MONOGRAM_COMPACT)
+        parts.append(art_svg)
+        rx = x + 19 * size * CW
+        right_rows = [
+            ("CAO THANH LAM", TITLE, True),
+            ("Cybersecurity researcher", TEXT, False),
+            ("a.k.a. Nguyen Nam Khanh", LED_SOFT, False),
+            ("───────────────────────────", DIM, False),
+            ("southkhanh@gmail.com", BLUE, False),
+        ]
+        for idx, (text, colour, bold) in enumerate(right_rows):
+            parts.append(t(rx, y + idx * line_h, text, size, colour, bold))
+        y += len(NK_MONOGRAM_COMPACT) * line_h + 10
+        open_count = sum(1 for s in SERVICES if s[1] == "open")
+        parts.append(msf_box_row(x, y, size, [(f"=[ khanh1916 · {open_count} open · {matches} modules", ACCENT, True)], 42, ACCENT, True))
+        y += line_h
+        parts.append(msf_box_row(x, y, size, [
+            ("+ -- --=[ ", DIM),
+            ("offense", RED), (" | ", DIM), ("defense", BLUE), (" | ", DIM), ("privacy", GREEN),
+        ], 42))
+        return "".join(parts), base, anim, y + 4
+
+    size, line_h = 16, 21
+    art_svg, base, anim = monogram_splash(x, y, size, line_h, NK_MONOGRAM_DESKTOP)
+    parts = [art_svg]
+    rx = x + 22 * size * CW
+    open_count = sum(1 for s in SERVICES if s[1] == "open")
+    box_w = 52
+    parts.append(msf_box_row(rx, y, size, [("=[ khanh1916 · Kali Research Profile", ACCENT, True)], box_w, ACCENT, True))
+    box_rows = [
+        [("+ -- --=[ ", DIM), ("CAO THANH LAM", TITLE, True), ("  ·  Nguyen Nam Khanh", LED_SOFT)],
+        [("+ -- --=[ ", DIM), ("role: Cybersecurity researcher", TEXT)],
+        [("+ -- --=[ ", DIM), ("themes: ", SOFT), ("offense", RED), (" | ", DIM), ("defense", BLUE), (" | ", DIM), ("privacy", GREEN)],
+        [("+ -- --=[ ", DIM), (f"{open_count} services open · {matches} featured modules", SOFT)],
+        [("+ -- --=[ ", DIM), ("contact: ", SOFT), ("southkhanh@gmail.com", BLUE)],
+    ]
+    for idx, segs in enumerate(box_rows, start=1):
+        parts.append(msf_box_row(rx, y + idx * line_h, size, segs, box_w))
+    return "".join(parts), base, anim, y + (len(NK_MONOGRAM_DESKTOP) - 1) * line_h
 
 
-def hero(compact, latest):
-    """The whole top of the page: one Kali terminal with the intro, whoami, .plan, nmap and ls."""
+def hero(compact, latest, matches=3):
+    """The whole top of the page: Kali QTerminal launching msfconsole with NK banner, .plan, services and stack."""
     w = COMPACT_W if compact else 860
-    size, line_h, x = (13, 20, 20) if compact else (16, 23, 20)
-    wrap = int((w - 2 * x) / (size * CW))
+    size, line_h, x = (13, 19, 20) if compact else (16, 21, 20)
+    cell = size * CW
+    wrap = int((w - 2 * x) / cell)
     open_count = sum(1 for s in SERVICES if s[1] == "open")
 
     def wrapped(text, colour):
@@ -302,110 +357,98 @@ def hero(compact, latest):
             table.append([(f"{port:<10}", LED_SOFT), (f"{service:<11}", colour), (short_text, ACCENT if hidden else TEXT)])
         else:
             table.append([(f"{port:<11}", LED_SOFT), (f"{state:<10}", colour), (f"{service:<13}", TEXT), (long_text, ACCENT if hidden else SOFT)])
+
+    port_mod = "scanner/portscan" if compact else "scanner/portscan/khanh1916"
     blocks = [
-        ("whoami", [[("cao-thanh-lam", TEXT)]]),
-        ("cat ~/.plan", [[(line, TEXT)] for line in textwrap.wrap(PLAN, wrap)] + [[], [("contact: southkhanh@gmail.com", TEXT)], [], [("# You're the pentester now.", DIM)]]),
-        ("nmap -sV github.com/Khanh1916", [
-            [("Starting Nmap against Cao Thanh Lam", SOFT)],
+        ("cat ~/.plan", [[(line, TEXT)] for line in textwrap.wrap(PLAN, wrap)] + [[], [("# You're the pentester now.", DIM)]], None),
+        ("services", [
+            *wrapped("Starting service inventory for Cao Thanh Lam", SOFT),
             *wrapped(f"Host is up. Latest push: {latest}", SOFT),
             [],
             *table,
             [],
             *wrapped("Service Info: OS: Linux, Windows, Cisco IOS, Junos", SOFT),
-            [(f"Nmap done: 1 human scanned, {open_count} services open", SOFT)],
-        ]),
-        ("ls ~/stack", stack_lines(compact)),
+            [(f"Status: 1 researcher audited, {open_count} services open", SOFT)],
+        ], port_mod),
+        ("ls ~/stack", stack_lines(compact), None),
     ]
-    per_line = 0.11
-    settled = 2  # whoami and .plan are already on screen, so the window never opens empty
-    total = round(timeline_length(blocks[settled:], per_line) + 1)
-    intro, y = banner(compact, x)
-    cell = size * CW
-    gap = line_h // 2
-    parts, base, anim, moment = [intro], "", "", 0.5
-    index = 0
-    y += gap
-    for number, (command, lines) in enumerate(blocks):
-        live = number >= settled
+
+    parts = []
+    # Top Kali zsh prompt launching msfconsole
+    y = 84
+    parts.append(kali_prompt(x, y, size, line_h) + t(x + 4 * cell, y + line_h, "msfconsole", size, TITLE))
+    y += line_h + 24
+
+    intro, base, anim, y = banner(compact, x, y, matches)
+    parts.append(intro)
+    gap = 9 if compact else 11
+    spacer = 8 if compact else 9
+    for command, lines, module in blocks:
         y += line_h + gap
-        if live:
-            row, row_base, row_anim, moment = command_line(number, x, y, command, size, line_h, total, moment)
-            parts.append(row)
-            base += row_base
-            anim += row_anim
-        else:
-            parts.append(kali_prompt(x, y, size, line_h) + t(x + 4 * cell, y + line_h, command, size, TITLE))
-        y += line_h
+        prompt_svg, cmd_x = msf_prompt(x, y, size, module=module)
+        parts.append(prompt_svg + t(cmd_x, y, command, size, TITLE))
         for segments in lines:
-            y += line_h
-            if live:
-                moment += per_line
             if segments:
-                parts.append(runs(x, y, segments, size, f"l{index}" if live else ""))
-                if live:
-                    anim += shown_once(f"l{index}", moment, total)
-                    index += 1
-    y += line_h + gap
-    last = kali_prompt(x, y, size, line_h)
-    y += line_h
-    last += f'<rect class="bl" x="{x + 4 * cell:.1f}" y="{y - size + 2}" width="{cell:.1f}" height="{size + 2}" fill="{TEXT}"/>'
-    parts.append(f'<g class="end">{last}</g>')
-    anim += shown_once("end", moment + 0.2, total)
-    anim += "@keyframes bl{50%{opacity:0}}.bl{animation:bl 1s steps(1,end) infinite}"
-    h = y + 22
+                y += line_h
+                parts.append(runs(x, y, segments, size))
+            else:
+                y += spacer
+    h = y + 20
     services = ", ".join(s[2] for s in SERVICES if s[1] == "open")
     names = "go, python, bash, powershell, php, sql, linux, docker, kubernetes, github-actions, mysql, oracle, pytorch, flower, opacus, scikit-learn, pandas, numpy"
     label = (
         "Cao Thanh Lam, a.k.a. Nguyen Nam Khanh. Cybersecurity researcher: break systems to see how they fail, harden them and catch the drift, and learn from data without reading it. "
-        f"A Kali terminal session. whoami prints cao-thanh-lam. {PLAN} Contact: southkhanh@gmail.com. An nmap scan shows open services: {services}; port 31337 is filtered and marked flag. The stack directory lists {names}."
+        f"A Kali terminal running msfconsole with an NK monogram banner. {PLAN} Contact: southkhanh@gmail.com. "
+        f"The service table lists open services: {services}; port 31337 is filtered and marked flag. The stack directory lists {names}."
     )
     comment = f"31337/tcp stage 2: {CTF_CIPHER}"
-    return svg(w, h, window_frame(w, h, menu=True, centred=not compact) + "".join(parts), base, anim, label, comment, fixed=False)
-
-
-def command_panel(command, lines, compact, label):
-    """A single command and its output in its own Kali window."""
-    w = COMPACT_W if compact else 860
-    size, line_h, x = (13, 20, 14) if compact else (16, 23, 20)  # compact: the nuclei command needs 48 columns
-    per_line = 0.15
-    total = round(timeline_length([(command, lines)], per_line) + 1)
-    y = 62
-    row, base, anim, moment = command_line(0, x, y, command, size, line_h, total, 0.5)
-    parts = [row]
-    y += line_h
-    for i, segments in enumerate(lines):
-        y += line_h
-        moment += per_line
-        if segments:
-            parts.append(runs(x, y, segments, size, f"l{i}"))
-            anim += shown_once(f"l{i}", moment, total)
-    h = y + 20
-    return svg(w, h, window_frame(w, h) + "".join(parts), base, anim, label, fixed=False)
+    return svg(w, h, window_frame(w, h, menu=True) + "".join(parts), base, anim, label, comment, fixed=False)
 
 
 def nuclei_panel(compact, matches):
-    return command_panel(
-        "nuclei -u github.com/Khanh1916 -severity all",
-        [[("[INF] ", LED_SOFT), (f"Scan completed. {matches} matches found.", TEXT)]],
-        compact, f"nuclei scan of the profile: {matches} matches found, shown as the project cards below.",
+    """msfconsole module search header introducing the featured finding cards below."""
+    w = COMPACT_W if compact else 860
+    size, line_h, x = (13, 20, 20) if compact else (16, 23, 20)
+    command = "search type:finding" if compact else "search type:finding author:Khanh1916"
+    y = 32
+    prompt_svg, cmd_x = msf_prompt(x, y, size)
+    parts = [prompt_svg, t(cmd_x, y, command, size, TITLE)]
+    y += 6 + line_h
+    parts.append(t(x, y, "Matching Modules", size, TEXT, True))
+    y += line_h
+    parts.append(t(x, y, "================", size, DIM))
+    y += line_h
+    status = f"{matches} matched. Select a card below to inspect." if compact else f"{matches} modules matched. Select a card below to inspect."
+    parts.append(runs(x, y, [("[*] ", BLUE, True, ), (status, TEXT if not compact else SOFT)], size, "pulse"))
+    h = y + 18
+    anim = "@keyframes pulse{0%,100%{opacity:1}50%{opacity:.65}}.pulse{animation:pulse 3.2s ease-in-out infinite}"
+    return svg(
+        w, h, panel_frame(w, h) + "".join(parts), "", anim,
+        f"msfconsole module search: {matches} featured finding modules matched below.",
+        fixed=False,
     )
-
-
-def support_panel(compact):
-    width = int((COMPACT_W - 40) / (13 * CW)) if compact else 85
-    text = [
-        "If my labs or tools helped you learn or build something, you can support me.",
-        "Thank you!",
-        "International: GitHub Sponsors preferred. Ko-fi for card or PayPal, no GitHub needed.",
-        "Vietnam: MoMo preferred.",
-    ]
-    lines = [[(line, TEXT)] for paragraph in text for line in textwrap.wrap(paragraph, width, break_on_hyphens=False)]  # keep "Ko-fi" whole
-    return command_panel("./support", lines, compact, " ".join(text))
 
 
 # ---------------------------------------------------------------- finding cards
 
-CARD_W, CARD_H, CARD_BAR = 400, 291, 28  # the layout below the title bar is 263 tall
+CARD_W, CARD_H = 400, 260  # compact vertical module block
+CARD_DESKTOP_W, CARD_DESKTOP_H = 860, 168  # desktop msfconsole module slice
+
+
+def fit_langs(edges, limit):
+    """Join language names on ' / ' without splitting any name mid-word."""
+    names = [e["node"]["name"] for e in edges]
+    out = ""
+    for name in names:
+        candidate = f"{out} / {name}" if out else name
+        if len(candidate) <= limit:
+            out = candidate
+        elif not out:
+            out = name[:limit]
+            break
+        else:
+            break
+    return out
 
 
 def summarize(text, width=44, max_lines=3):
@@ -426,27 +469,49 @@ def summarize(text, width=44, max_lines=3):
     return lines
 
 
-def card(index, repo, tag, colour, body, base, anim):
+def card(index, repo, tag, colour, body, base, anim, compact=True):
+    """One msfconsole module entry showing description, language use command, and TUI telemetry."""
     name, stars = repo["name"], repo["stargazerCount"]
-    lines = summarize(repo.get("description")) or ["No description yet."]
-    languages = " / ".join(e["node"]["name"] for e in repo["languages"]["edges"])
+    edges = repo["languages"]["edges"]
     release = (repo.get("latestRelease") or {}).get("tagName")
-    marker = f"{release}  F-{index:02d}" if release else f"F-{index:02d}"
-    parts = [
-        f'<rect x="20" y="17" width="{len(tag) * 7.2 + 16:.1f}" height="20" rx="4" fill="{colour}" fill-opacity=".14"/>',
-        t(28, 31, tag, 12, colour, True),
-        t(CARD_W - 20, 31, marker, 12, DIM, anchor="end"),
-        t(20, 66, name, 23, TITLE, True),
-    ]
+    mod_idx = index - 1
+    mod_prefix = f"[{mod_idx}] "
+    mod_ns = f"finding/{tag.lower()}/"
+
+    if compact:
+        lines = summarize(repo.get("description"), width=44, max_lines=3) or ["No description yet."]
+        langs = fit_langs(edges, 36)
+        parts = [
+            runs(20, 28, [(mod_prefix, DIM), (mod_ns, colour), (name, TITLE, True)], 13),
+        ]
+        if stars:
+            parts.append(t(CARD_W - 20, 28, f"★ {stars}", 13, ACCENT, anchor="end"))
+        for i, line in enumerate(lines):
+            parts.append(t(20, 52 + i * 18, line, 13.5, SOFT))
+        parts.append(f'<path d="M20 106H{CARD_W - 20}" stroke="{BORDER}" stroke-width="1"/>')
+        parts.append(f'<g transform="translate(0,4)">{body}</g>')
+        parts.append(runs(20, 246, [(f"use {mod_idx}", BLUE), (f"  # {langs}", DIM)] if langs else [(f"use {mod_idx}", BLUE)], 13))
+        frame = panel_frame(CARD_W, CARD_H)
+        return svg(CARD_W, CARD_H, frame + "".join(parts), base, anim, f"{name}: {' '.join(lines)}", fixed=False)
+
+    lines = summarize(repo.get("description"), width=48, max_lines=3) or ["No description yet."]
+    langs = fit_langs(edges, 34)
+    head_segs = [(mod_prefix, DIM), (mod_ns, colour), (name, TITLE, True)]
+    if release and len(mod_prefix) + len(mod_ns) + len(name) + len(release) + 4 <= 43:
+        head_segs.append((f"  ({release})", DIM))
+    parts = [runs(20, 32, head_segs, 15)]
     if stars:
-        parts.append(t(20 + len(name) * 23 * CW + 12, 66, f"★ {stars}", 14, ACCENT))
+        parts.append(t(444, 32, f"★ {stars}", 13.5, ACCENT, anchor="end"))
     for i, line in enumerate(lines):
-        parts.append(t(20, 90 + i * 19, line, 13.5, SOFT))
-    parts.append(f'<g transform="translate(0,19)">{body}</g>')
-    parts.append(t(20, 248, languages[:50], 12, DIM))
-    content = f'<g transform="translate(0,{CARD_BAR})">{"".join(parts)}</g>'
-    frame = window_frame(CARD_W, CARD_H, f"~/findings/F-{index:02d}")
-    return svg(CARD_W, CARD_H, frame + content, base, anim, f"{name}: {' '.join(lines)}")
+        parts.append(t(20, 60 + i * 20, line, 14, TEXT))
+    use_segs = [("msf6 ", RED, True), ("> ", TEXT), (f"use {mod_idx}", BLUE)]
+    if langs:
+        use_segs.append((f"  # {langs}", DIM))
+    parts.append(runs(20, 146, use_segs, 13))
+    parts.append(f'<path d="M460 16V152" stroke="{BORDER}" stroke-width="1"/>')
+    parts.append(f'<g transform="translate(460,-84)">{body}</g>')
+    frame = panel_frame(CARD_DESKTOP_W, CARD_DESKTOP_H)
+    return svg(CARD_DESKTOP_W, CARD_DESKTOP_H, frame + "".join(parts), base, anim, f"{name}: {' '.join(lines)}", fixed=False)
 
 
 def anim_languages(repo):
@@ -469,106 +534,104 @@ def anim_languages(repo):
 
 
 def anim_oracle(repo):
+    """SQLi probe box and terminal bracket module indicators inside [20..380, 114..228]."""
     total = 10
     payload = "' UNION SELECT user,pw FROM users--"
-    x, y = 32, 150
-    body = f'<rect x="20" y="131" width="360" height="29" rx="5" fill="{BG}" stroke="{BORDER}"/>' + t(x, y, payload, 13, RED)
-    cover, base, anim = typed("pay", x, y, len(payload), 13, BG, total, 0.4, 2.4, 9.3)
+    px = 28 + 2 * 12 * CW
+    body = runs(20, 126, [("[probe] ", DIM), ("sqlmap --technique=U", SOFT)], 12)
+    body += f'<rect x="20" y="135" width="360" height="26" rx="3" fill="{BG}" stroke="{BORDER}"/>'
+    body += runs(28, 152, [("> ", RED, True), (payload, TITLE)], 12)
+    cover, base, anim = typed("pay", px, 152, len(payload), 12, BG, total, 3.8, 4.1, 2.2)
     body += cover
-    chips = [("C1 SQLI", 20, 100), ("C2 LOGIC", 128, 108), ("C3 SUPPLY CHAIN", 244, 136)]
-    for i, (text, cx, width) in enumerate(chips):
-        body += f'<rect x="{cx}" y="172" width="{width}" height="28" rx="5" fill="{BG}" stroke="{LINE}"/>'
-        body += t(cx + width / 2, 190, text, 12, SOFT, anchor="middle")  # SOFT, not DIM: DIM is under 4.5:1 on BG
-        lit = t(cx + width / 2, 190, text, 12, TITLE, True, "middle")
-        body += f'<g class="ch{i}"><rect x="{cx}" y="172" width="{width}" height="28" rx="5" fill="{RED}" fill-opacity=".3" stroke="{RED}"/>{lit}</g>'
-        anim += shown(f"ch{i}", 3.3 + i * 1.4, 9.3, total)
+    for i, (label, cx) in enumerate((("[+ C1:SQLI]", 20), ("[+ C2:LOGIC]", 134), ("[+ C3:SUPPLY]", 254))):
+        body += t(cx, 188, label, 12, SOFT)
+        body += f'<g class="ch{i}">{t(cx, 188, label, 12, RED, True)}</g>'
+        anim += shown(f"ch{i}", 6.4 + i * 0.9, 9.6, total)
+    body += t(20, 216, "[*] status: 3 classes armed · CTF target ready", 12, SOFT)
     return body, base, anim
 
 
 def anim_secbaseline(repo):
+    """149-control matrix and pass/drift TUI telemetry inside [20..380, 114..228]."""
     match = re.search(r"(\d+) CIS-style", repo.get("description") or "")
     controls = int(match.group(1)) if match else 149
     total = 10
     columns = 30
     cell, gap = 9, 3
-    x0, y0 = 20, 130
+    x0, y0 = 20, 136
     rng = random.Random(149)
     drifted = set(rng.sample(range(controls), 3))
-    body = ""
+    body = runs(20, 126, [("[audit] ", DIM), (f"{controls} CIS controls", TEXT)], 12)
+    body += f'<g class="dr">{t(380, 126, "[! 3 DRIFT]", 12, RED, True, "end")}</g>'
     base = ".dr{opacity:0}"
     anim = "@keyframes dr{0%,74%{opacity:0}75%,90%{opacity:1}91%,100%{opacity:0}}.dr{animation:dr 10s linear infinite}"
     for i in range(controls):
         cx = x0 + (i % columns) * (cell + gap)
         cy = y0 + (i // columns) * (cell + gap)
         delay = i / controls * 4.0
-        body += f'<rect class="q" x="{cx}" y="{cy}" width="{cell}" height="{cell}" rx="2" fill="{GRID}" style="animation-delay:{delay:.2f}s"/>'
+        body += f'<rect class="q" x="{cx}" y="{cy}" width="{cell}" height="{cell}" rx="1.5" fill="{GRID}" style="animation-delay:{delay:.2f}s"/>'
         if i in drifted:
-            body += f'<rect class="dr" x="{cx}" y="{cy}" width="{cell}" height="{cell}" rx="2" fill="{RED}"/>'
+            body += f'<rect class="dr" x="{cx}" y="{cy}" width="{cell}" height="{cell}" rx="1.5" fill="{RED}"/>'
     anim += "@keyframes qq{0%{fill:" + LED_OFF + "}4%,100%{fill:" + GRID + "}}.q{animation:qq 10s linear infinite}"
-    rows =(controls + columns - 1) // columns
-    y = y0 + rows * (cell + gap) + 16
-    body += t(20, y, f"$ checklist diff  # {controls} controls", 12, SOFT)
-    note = t(380, y, "3 regressions", 12, RED, True, "end")
-    body += f'<g class="dr">{note}</g>'
+    y = y0 + ((controls + columns - 1) // columns) * (cell + gap) + 20
+    body += t(20, y, f"PASS [█████████████░] {controls - 3}/{controls}", 12, BLUE, True)
+    body += f'<g class="dr">{t(380, y, "3 regressions", 12, RED, True, "end")}</g>'
     return body, base, anim
 
 
 def anim_federated(repo):
-    """Count tables stay on the gateways; only masked vectors reach SecAgg+."""
+    """Privacy-preserving SecAgg+ -> synthetic -> IDS pipeline inside [20..380, 114..228]."""
     total = 6
     rng = random.Random(1883)
-    box_x, box_w, mid = 130, 84, 159
+    box_x, box_w, mid = 128, 78, 165
     base = ".mv{opacity:0}"
     anim = (
         "@keyframes nz{0%,100%{opacity:1}50%{opacity:.35}}.nz{animation:nz 1.6s ease-in-out infinite}"
         "@keyframes fl{to{stroke-dashoffset:-14}}.fl{animation:fl .7s linear infinite}"
     )
-    body = t(20, 122, "+ ε noise", 11, GREEN) + t(110, 122, "masked", 10.5, ACCENT, anchor="middle")
+    body = runs(20, 126, [("[secagg+] ", DIM), ("DP ε-noise · local raw locked", GREEN)], 12)
     for gateway in range(5):
-        y = 128 + gateway * 13
-        hot = rng.sample(range(4), 2)  # non-IID: each gateway sees only some classes
-        body += f'<line x1="70" y1="{y + 5}" x2="{box_x}" y2="{mid}" stroke="{LINE}" stroke-width="1.2"/>'
+        y = 138 + gateway * 11
+        hot = rng.sample(range(4), 2)
+        body += f'<line x1="68" y1="{y + 3.5}" x2="{box_x}" y2="{mid}" stroke="{LINE}" stroke-width="1.1"/>'
         for column in range(4):
-            x = 20 + column * 13
+            x = 20 + column * 11
             if column in hot:
                 body += (
-                    f'<rect class="nz" x="{x}" y="{y}" width="11" height="10" rx="1.5" fill="{GREEN}" '
+                    f'<rect class="nz" x="{x}" y="{y}" width="9" height="7" rx="1" fill="{GREEN}" '
                     f'fill-opacity="{rng.uniform(0.6, 1):.2f}" style="animation-delay:{-rng.uniform(0, 1.6):.2f}s"/>'
                 )
             else:
-                body += f'<rect class="q" x="{x}" y="{y}" width="11" height="10" rx="1.5" fill="{GREEN}" fill-opacity=".16"/>'
-        dx, dy = box_x - 79, mid - y - 5
+                body += f'<rect class="q" x="{x}" y="{y}" width="9" height="7" rx="1" fill="{GREEN}" fill-opacity=".18"/>'
+        dx, dy = box_x - 77, mid - y - 3.5
         anim += (
             f"@keyframes mv{gateway}{{0%{{transform:translate(0,0);opacity:0}}10%,85%{{opacity:1}}"
             f"100%{{transform:translate({dx}px,{dy}px);opacity:0}}}}"
             f".mv{gateway}{{animation:mv{gateway} 2.4s linear infinite}}"
         )
         for offset in (0, 1.2):
-            body += f'<rect class="mv mv{gateway}" x="70" y="{y + 3}" width="9" height="4" rx="1" fill="{ACCENT}" style="animation-delay:{-(gateway * 0.4 + offset):.2f}s"/>'
+            body += f'<rect class="mv mv{gateway}" x="68" y="{y + 2}" width="8" height="3" rx="1" fill="{ACCENT}" style="animation-delay:{-(gateway * 0.4 + offset):.2f}s"/>'
 
-    body += f'<rect x="{box_x}" y="141" width="{box_w}" height="36" rx="6" fill="{GREEN}" fill-opacity=".14" stroke="{GREEN}"/>'
-    body += t(box_x + box_w / 2, 164, "SecAgg+", 13, TITLE, True, "middle")
-    body += f'<path class="fl" d="M{box_x + box_w + 2} {mid}h22" stroke="{GREEN}" stroke-width="1.5" stroke-dasharray="3 4"/>'
+    body += f'<rect x="{box_x}" y="149" width="{box_w}" height="32" rx="4" fill="{GREEN}" fill-opacity=".14" stroke="{GREEN}"/>'
+    body += t(box_x + box_w / 2, 169, "SecAgg+", 12.5, TITLE, True, "middle")
+    body += f'<path class="fl" d="M{box_x + box_w + 2} {mid}h20" stroke="{GREEN}" stroke-width="1.5" stroke-dasharray="3 4"/>'
 
     for row in range(5):
-        y = 139 + row * 9
+        y = 145 + row * 8
         cells = "".join(
-            f'<rect x="{240 + column * 14}" y="{y}" width="12" height="6" rx="1" fill="{GREEN}" fill-opacity="{rng.uniform(0.35, 1):.2f}"/>'
+            f'<rect x="{230 + column * 12}" y="{y}" width="10" height="5" rx="1" fill="{GREEN}" fill-opacity="{rng.uniform(0.45, 1):.2f}"/>'
             for column in range(4)
         )
         body += f'<g class="sy{row}">{cells}</g>'
         anim += shown(f"sy{row}", 0.6 + row * 0.5, 5.6, total)
 
-    body += f'<path class="fl" d="M297 {mid}h29" stroke="{ACCENT}" stroke-width="1.5" stroke-dasharray="3 4"/>'
-    body += f'<rect x="328" y="143" width="52" height="32" rx="6" fill="{BG}" stroke="{BORDER}"/>'
-    body += f'<g class="ids"><rect x="328" y="143" width="52" height="32" rx="6" fill="{ACCENT}" fill-opacity=".22" stroke="{ACCENT}"/></g>'
-    body += t(354, 164, "IDS", 13, TITLE, True, "middle")
+    body += f'<path class="fl" d="M280 {mid}h28" stroke="{ACCENT}" stroke-width="1.5" stroke-dasharray="3 4"/>'
+    body += f'<rect x="312" y="150" width="54" height="30" rx="4" fill="{BG}" stroke="{BORDER}"/>'
+    body += f'<g class="ids"><rect x="312" y="150" width="54" height="30" rx="4" fill="{ACCENT}" fill-opacity=".22" stroke="{ACCENT}"/></g>'
+    body += t(339, 169, "IDS", 12.5, TITLE, True, "middle")
     anim += shown("ids", 3.2, 5.6, total)
 
-    body += t(20, 205, "raw stays local", 11, SOFT)
-    body += t(box_x + box_w / 2, 205, "noisy sum", 11, SOFT, anchor="middle")
-    body += t(267, 205, "synthetic", 11, SOFT, anchor="middle")
-    body += t(354, 205, "train", 11, SOFT, anchor="middle")
+    body += t(20, 216, "node[0..4] -> noisy sum -> synth -> train", 12, SOFT)
     return body, base, anim
 
 
@@ -601,8 +664,8 @@ ANIMATIONS = {"oracle": anim_oracle, "secbaseline": anim_secbaseline, "federated
 
 
 def activity(calendar, events, compact):
-    """Recent public GitHub events as tcpdump lines, then the year as a capture map."""
-    w, margin, size, line_h = (COMPACT_W, 20, 13, 20) if compact else (860, 32, 15, 22)
+    """Recent public GitHub events via tcpdump inside msf6, then the year as a capture map."""
+    w, margin, size, line_h = (COMPACT_W, 20, 13, 20) if compact else (860, 20, 16, 22)
     chars = int((w - 2 * margin) / (size * CW))
     weeks = calendar["weeks"]
     days = [day for week in weeks for day in week["contributionDays"]]
@@ -613,8 +676,9 @@ def activity(calendar, events, compact):
     for d in days:
         run = run + 1 if d["contributionCount"] else 0
         best = max(best, run)
-    parts = [kali_prompt(margin, 62, size, line_h), t(margin + 4 * size * CW, 62 + line_h, "tcpdump -i github -n host Khanh1916", size, TITLE)]
-    y = 62 + line_h
+    prompt_svg, cmd_x = msf_prompt(margin, 34, size)
+    parts = [prompt_svg, t(cmd_x, 34, "tcpdump -i github -n host Khanh1916", size, TITLE)]
+    y = 40
     rows = events or ["(no public packets captured)"]
     for event in rows:
         y += line_h
@@ -622,11 +686,17 @@ def activity(calendar, events, compact):
         text = re.sub(r"^(\d\d:\d\d):\d\d IP \S+ > ", r"\1 > ", event[6:]) if compact and events else event
         clipped = text if len(text) <= chars else text[:chars - 1] + "…"
         parts.append(t(margin, y, clipped, size, SOFT))
-    y += line_h + 8
+    y += line_h + 10
     burst = "day burst" if compact else "day longest burst"
     gap = " " if compact else "  "  # a four-digit total must still fit the 400px compact panel
     parts.append(runs(margin, y, [(f"{total}", ACCENT), (f" packets{gap}", SOFT), (f"{active}", ACCENT), (f" active days{gap}", SOFT),
                                   (f"{best}", ACCENT), (f" {burst}{gap}", SOFT), (f"{peak}", ACCENT), (" peak", SOFT)], size - 1))
+    if not compact:
+        sw_x = w - margin - 102
+        parts.append(t(sw_x - 6, y, "less", 12, DIM, anchor="end"))
+        for idx, col in enumerate((LED_OFF, *HEAT)):
+            parts.append(f'<rect x="{sw_x + idx * 12}" y="{y - 9}" width="9" height="9" rx="1.5" fill="{col}"/>')
+        parts.append(t(w - margin, y, "more", 12, DIM, anchor="end"))
     pitch = (w - 2 * margin) / len(weeks)
     cell = round(pitch * 0.8, 2)
     y0 = y + 16
@@ -642,7 +712,7 @@ def activity(calendar, events, compact):
     grid_h = 7 * pitch
     parts.append(f'<rect class="bm" x="{margin - 3}" y="{y0 - 4:.1f}" width="2.5" height="{grid_h + 6:.1f}" fill="{FLASH}"/>')
     h = int(y0 + grid_h + 18)
-    frame = window_frame(w, h)
+    frame = panel_frame(w, h)
     base = ".f,.bm{opacity:0}"
     anim = (
         f"@keyframes f{{0%{{opacity:.92}}7%,100%{{opacity:0}}}}.f{{animation:f {duration}s linear infinite}}"
@@ -659,74 +729,28 @@ SIGNOFF = "You can’t trust code that you did not totally create yourself."
 
 
 def signoff(compact):
-    w, size, width = (COMPACT_W, 16, 36) if compact else (860, 20, 80)
-    lines = textwrap.wrap(SIGNOFF, width)
-    total, line_h, first_y = 14, size + 8, 102
-    parts = [t(w / 2, 66, "Connection to Khanh1916 closed.", 13, DIM, anchor="middle")]
-    base, anim, start, y, x = "", "", 2.2, first_y, 0.0
-    marks, cell = [], size * CW
-    for i, line in enumerate(lines):
-        y = first_y + i * line_h
-        x = (w - len(line) * size * CW) / 2
-        duration = len(line) * 0.05
+    """Exit msf6 cleanly back to Kali zsh, print ~/.trust via cat, and rest on an idle prompt cursor."""
+    w, size, line_h, x = (COMPACT_W, 13, 19, 20) if compact else (860, 16, 22, 20)
+    wrap = int((w - 2 * x) / (size * CW))
+    lines = textwrap.wrap(SIGNOFF, wrap)
+    y = 28 if compact else 32
+    prompt_svg, cmd_x = msf_prompt(x, y, size)
+    parts = [prompt_svg, t(cmd_x, y, "exit", size, TITLE)]
+    y += line_h + (5 if compact else 6)
+    cell = size * CW
+    parts.append(kali_prompt(x, y, size, line_h) + t(x + 4 * cell, y + line_h, "cat ~/.trust", size, TITLE))
+    y += 2 * line_h + 4
+    for line in lines:
         parts.append(t(x, y, line, size, ACCENT, True))
-        cover, cover_base, cover_anim = typed(f"say{i}", x, y, len(line), size, PANEL, total, start, duration, 13.4)
-        parts.append(cover)
-        base += cover_base
-        anim += cover_anim
-        marks.append((x, y, len(line), start, duration))
-        start += duration
-    h = y + 24
-    frame = window_frame(w, h)
-    cursor_x = x + len(lines[-1]) * cell + 3
-
-    def at(cx, cy):
-        return f"transform:translate({cx - cursor_x:.1f}px,{cy - y:.1f}px)"
-
-    finish = 13.4 / total * 100
-    stops = []
-    for i, (line_x, line_y, chars, begin, duration) in enumerate(marks):
-        a, b = begin / total * 100, (begin + duration) / total * 100
-        head = f"0%,{a:.3f}%" if i == 0 else f"{a + 0.02:.3f}%"
-        stops.append(f"{head}{{{at(line_x + 3, line_y)};animation-timing-function:steps({chars},end)}}")
-        stops.append(f"{b:.3f}%{{{at(line_x + 3 + chars * cell, line_y)}}}")
-    stops.append(f"{finish:.3f}%{{{at(cursor_x, y)}}}")
-    stops.append(f"{finish + 0.02:.3f}%,100%{{{at(marks[0][0] + 3, marks[0][1])}}}")
-    parts.append(f'<rect class="bl" x="{cursor_x:.1f}" y="{y - size * 0.8:.1f}" width="{size * 0.55:.1f}" height="{size}" fill="{ACCENT}"/>')
-    anim += "@keyframes cur{" + "".join(stops) + "}"
-    anim += f"@keyframes bl{{50%{{opacity:0}}}}.bl{{animation:bl 1s steps(1,end) infinite,cur {total}s linear infinite}}"
-    return svg(w, h, frame + "".join(parts), base, anim, f"Connection to Khanh1916 closed. {SIGNOFF}", fixed=False)
-
-
-# ---------------------------------------------------------------- buttons
-
-# Brand glyphs from Simple Icons (CC0), on a 24x24 grid. MoMo is not in the set.
-BRAND_ICONS = {
-    "sponsors": "M17.625 1.499c-2.32 0-4.354 1.203-5.625 3.03-1.271-1.827-3.305-3.03-5.625-3.03C3.129 1.499 0 4.253 0 8.249c0 4.275 3.068 7.847 5.828 10.227a33.14 33.14 0 0 0 5.616 3.876l.028.017.008.003-.001.003c.163.085.342.126.521.125.179.001.358-.041.521-.125l-.001-.003.008-.003.028-.017a33.14 33.14 0 0 0 5.616-3.876C20.932 16.096 24 12.524 24 8.249c0-3.996-3.129-6.75-6.375-6.75zm-.919 15.275a30.766 30.766 0 0 1-4.703 3.316l-.004-.002-.004.002a30.955 30.955 0 0 1-4.703-3.316c-2.677-2.307-5.047-5.298-5.047-8.523 0-2.754 2.121-4.5 4.125-4.5 2.06 0 3.914 1.479 4.544 3.684.143.495.596.797 1.086.796.49.001.943-.302 1.085-.796.63-2.205 2.484-3.684 4.544-3.684 2.004 0 4.125 1.746 4.125 4.5 0 3.225-2.37 6.216-5.048 8.523z",
-    "kofi": "M11.351 2.715c-2.7 0-4.986.025-6.83.26C2.078 3.285 0 5.154 0 8.61c0 3.506.182 6.13 1.585 8.493 1.584 2.701 4.233 4.182 7.662 4.182h.83c4.209 0 6.494-2.234 7.637-4a9.5 9.5 0 0 0 1.091-2.338C21.792 14.688 24 12.22 24 9.208v-.415c0-3.247-2.13-5.507-5.792-5.87-1.558-.156-2.65-.208-6.857-.208m0 1.947c4.208 0 5.09.052 6.571.182 2.624.311 4.13 1.584 4.13 4v.39c0 2.156-1.792 3.844-3.87 3.844h-.935l-.156.649c-.208 1.013-.597 1.818-1.039 2.546-.909 1.428-2.545 3.064-5.922 3.064h-.805c-2.571 0-4.831-.883-6.078-3.195-1.09-2-1.298-4.155-1.298-7.506 0-2.181.857-3.402 3.012-3.714 1.533-.233 3.559-.26 6.39-.26m6.547 2.287c-.416 0-.65.234-.65.546v2.935c0 .311.234.545.65.545 1.324 0 2.051-.754 2.051-2s-.727-2.026-2.052-2.026m-10.39.182c-1.818 0-3.013 1.48-3.013 3.142 0 1.533.858 2.857 1.949 3.897.727.701 1.87 1.429 2.649 1.896a1.47 1.47 0 0 0 1.507 0c.78-.467 1.922-1.195 2.623-1.896 1.117-1.039 1.974-2.364 1.974-3.897 0-1.662-1.247-3.142-3.039-3.142-1.065 0-1.792.545-2.338 1.298-.493-.753-1.246-1.298-2.312-1.298",
-}
-BUTTONS = {
-    "sponsor": ("sponsor", "443/tcp", "sponsors"),
-    "kofi": ("ko-fi", "443/tcp", "kofi"),
-    "momo": ("momo", "443/tcp", None),
-}
-
-
-def button(label, port, icon):
-    """One open port per link, in the same form as the nmap scan."""
-    w, h, size, baseline, icon_x, icon_size = 222, 40, 13, 25, 122, 15
-    parts = [
-        f'<rect x=".75" y=".75" width="{w - 1.5}" height="{h - 1.5}" rx="6" fill="{PANEL}" stroke="{LINE}" stroke-width="1.5"/>',
-        t(14, baseline, port, size, SOFT),
-        t(79, baseline, "open", size, GREEN),
-        t(146, baseline, label, size, ACCENT),
-    ]
-    if icon:
-        scale = icon_size / 24
-        parts.append(f'<path transform="translate({icon_x} {(h - icon_size) / 2}) scale({scale})" d="{BRAND_ICONS[icon]}" fill="{ACCENT}"/>')
-    else:
-        parts.append(t(icon_x + icon_size / 2, baseline, "M", 15, ACCENT, True, "middle"))
-    return svg(w, h, "".join(parts), "", "", f"{port} open: {label}")
+        y += line_h
+    y += 8
+    parts.append(kali_prompt(x, y, size, line_h))
+    y += line_h
+    parts.append(f'<rect class="bl" x="{x + 4 * cell:.1f}" y="{y - size + 2}" width="{cell:.1f}" height="{size + 2}" fill="{TEXT}"/>')
+    h = y + 20
+    frame = panel_frame(w, h, r_bot=12)
+    anim = "@keyframes bl{50%{opacity:0}}.bl{animation:bl 1s steps(1,end) infinite}"
+    return svg(w, h, frame + "".join(parts), "", anim, f"msf6 exit, then cat ~/.trust prints: {SIGNOFF}", fixed=False)
 
 
 # ---------------------------------------------------------------- main
@@ -804,13 +828,15 @@ def fetch_events(visible):
 
 
 def themed_link(href, stem, alt):
-    """One link whose image follows the viewer's colour scheme (light is the fallback)."""
+    """One full-width card link switching by colour scheme and viewport width (light desktop is the fallback)."""
     # One line on purpose: whitespace inside a link renders as a stray underlined space on GitHub.
     return (
-        f'  <a href="{href}"><picture>'
+        f'<div><a href="{href}"><picture>'
+        f'<source media="(prefers-color-scheme: dark) and (max-width: 600px)" srcset="{RAW}/{stem}-compact.svg">'
+        f'<source media="(max-width: 600px)" srcset="{RAW}/{stem}-compact-light.svg">'
         f'<source media="(prefers-color-scheme: dark)" srcset="{RAW}/{stem}.svg">'
-        f'<img src="{RAW}/{stem}-light.svg" alt="{alt}"/>'
-        f'</picture></a>'
+        f'<img src="{RAW}/{stem}-light.svg" width="100%" alt="{alt}"/>'
+        f'</picture></a></div>'
     )
 
 
@@ -838,17 +864,14 @@ def main():
     for theme, suffix in (("dark", ""), ("light", "-light")):
         apply_theme(theme)
         files.update({
-            f"hero{suffix}.svg": hero(False, latest),
-            f"hero-compact{suffix}.svg": hero(True, latest),
+            f"hero{suffix}.svg": hero(False, latest, matches),
+            f"hero-compact{suffix}.svg": hero(True, latest, matches),
             f"nuclei{suffix}.svg": nuclei_panel(False, matches),
             f"nuclei-compact{suffix}.svg": nuclei_panel(True, matches),
             f"activity{suffix}.svg": activity(calendar, events, False),
             f"activity-compact{suffix}.svg": activity(calendar, events, True),
-            f"support{suffix}.svg": support_panel(False),
-            f"support-compact{suffix}.svg": support_panel(True),
             f"signoff{suffix}.svg": signoff(False),
             f"signoff-compact{suffix}.svg": signoff(True),
-            **{f"btn-{name}{suffix}.svg": button(*spec) for name, spec in BUTTONS.items()},
         })
         index = 0
         for entry in config["featured"]:
@@ -860,17 +883,19 @@ def main():
             index += 1
             draw = ANIMATIONS.get(entry.get("animation"), anim_languages)
             stem = f"card-{repo['name'].lower()}"
-            files[f"{stem}{suffix}.svg"] = card(index, repo, entry["tag"], COLOURS.get(entry.get("color"), SOFT), *draw(repo))
+            colour = COLOURS.get(entry.get("color"), SOFT)
+            files[f"{stem}{suffix}.svg"] = card(index, repo, entry["tag"], colour, *draw(repo), compact=False)
+            files[f"{stem}-compact{suffix}.svg"] = card(index, repo, entry["tag"], colour, *draw(repo), compact=True)
             if not suffix:
                 alt = html.escape(f"{repo['name']}: {' '.join(summarize(repo.get('description')))}", quote=True)
                 links.append(themed_link(repo["url"], stem, alt))
 
     readme = README.read_text(encoding="utf-8")
-    readme = replace_block(readme, "findings", '<p align="center">\n' + "\n".join(links) + "\n</p>")
+    readme = replace_block(readme, "findings", "\n".join(links))
     README.write_text(readme, encoding="utf-8", newline="\n")
 
     OUT.mkdir(exist_ok=True)
-    for stale in OUT.glob("card-*.svg"):
+    for stale in OUT.glob("*.svg"):
         if stale.name not in files:
             stale.unlink()
     for name, content in files.items():

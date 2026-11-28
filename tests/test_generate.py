@@ -21,8 +21,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import generate as g  # noqa: E402
 
 FEATURED = ["oracle-sec-lab", "secbaseline", "PP-FedData"]
-BUTTON_COUNT = len(g.BUTTONS)
-PER_THEME = 10 + BUTTON_COUNT + len(FEATURED)  # hero, nuclei, activity, support, signoff x2 sizes
+PER_THEME = 8 + 2 * len(FEATURED)  # hero, nuclei, activity, signoff, cards x2 sizes
 
 
 def fake_repo(name, pushed):
@@ -103,7 +102,7 @@ class PipelineTest(unittest.TestCase):
     def test_compact_panels_are_400_wide_and_nothing_overflows(self):
         ns = "{http://www.w3.org/2000/svg}"
         compact = [p for p in self.files if "-compact" in p.name]
-        self.assertEqual(len(compact), 2 * 5)
+        self.assertEqual(len(compact), 2 * (4 + len(FEATURED)))
         for path in compact:
             root = ET.fromstring(path.read_text(encoding="utf-8"))
             width = float(root.get("viewBox").split()[2])
@@ -116,8 +115,10 @@ class PipelineTest(unittest.TestCase):
 
     def test_hidden_repo_gets_no_card(self):
         self.assertFalse((self.tmp / "assets" / "card-greenlight.svg").exists())
+        self.assertFalse((self.tmp / "assets" / "card-greenlight-compact.svg").exists())
         for name in FEATURED:
             self.assertTrue((self.tmp / "assets" / f"card-{name.lower()}.svg").exists(), name)
+            self.assertTrue((self.tmp / "assets" / f"card-{name.lower()}-compact.svg").exists(), name)
 
     def test_readme_changes_only_between_markers(self):
         def outside(text):
@@ -128,6 +129,8 @@ class PipelineTest(unittest.TestCase):
     def test_cards_use_picture_markup_not_fragments(self):
         block = re.search(r"<!-- findings:start -->(.*)<!-- findings:end -->", self.readme, re.S).group(1)
         self.assertEqual(block.count("<picture>"), len(FEATURED))
+        self.assertEqual(block.count("-compact.svg"), len(FEATURED))
+        self.assertEqual(block.count("-compact-light.svg"), len(FEATURED))
         self.assertNotIn("gh-dark-mode-only", block)
 
     def test_hero_alt_matches_hero_label(self):
@@ -232,12 +235,16 @@ class UnitTest(unittest.TestCase):
             c /= 255
             return c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
 
-        def lum(h):
-            r, gr, b = (int(h.lstrip("#")[i:i + 2], 16) for i in (0, 2, 4))
+        def hex2rgb(h):
+            h = h.lstrip("#")
+            return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
+
+        def lum_rgb(rgb):
+            r, gr, b = rgb
             return 0.2126 * lin(r) + 0.7152 * lin(gr) + 0.0722 * lin(b)
 
-        def ratio(a, b):
-            hi, lo = sorted((lum(a), lum(b)), reverse=True)
+        def ratio_rgb(a, b):
+            hi, lo = sorted((lum_rgb(a), lum_rgb(b)), reverse=True)
             return (hi + 0.05) / (lo + 0.05)
 
         on_panel = ("TEXT", "TITLE", "SOFT", "DIM", "LED_SOFT", "ACCENT", "GRID", "RED", "BLUE", "GREEN")
@@ -245,7 +252,12 @@ class UnitTest(unittest.TestCase):
         for theme, palette in g.THEMES.items():
             for ground, names in (("PANEL", on_panel), ("BG", on_bg)):
                 for name in names:
-                    self.assertGreaterEqual(ratio(palette[name], palette[ground]), 4.5, f"{theme} {name} on {ground}")
+                    self.assertGreaterEqual(ratio_rgb(hex2rgb(palette[name]), hex2rgb(palette[ground])), 4.5, f"{theme} {name} on {ground}")
+            panel_rgb = hex2rgb(palette["PANEL"])
+            for name in ("RED", "BLUE", "GREEN"):
+                fg = hex2rgb(palette[name])
+                badge_bg = tuple(fg[i] * 0.11 + panel_rgb[i] * 0.89 for i in range(3))
+                self.assertGreaterEqual(ratio_rgb(fg, badge_bg), 4.5, f"{theme} {name} badge on tinted PANEL")
 
 
 if __name__ == "__main__":
