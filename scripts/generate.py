@@ -194,7 +194,6 @@ SERVICES = [
     ("6006/tcp", "open", "ml-stack", "PyTorch / scikit-learn / pandas / NumPy", "PyTorch / scikit / pandas"),
     ("6443/tcp", "open", "kubernetes", "Kubernetes / multi-tenant labs", "Kubernetes"),
     ("9092/tcp", "open", "flower", "Flower / Opacus / DP / SecAgg+", "Flower / Opacus / SecAgg+"),
-    ("31337/tcp", "filtered", "flag?", "filtered (no route)", "filtered"),
 ]
 
 
@@ -399,7 +398,7 @@ def hero(compact, latest, matches=3):
     label = (
         "Cao Thanh Lam, a.k.a. Nguyen Nam Khanh. Cybersecurity researcher: break systems to see how they fail, harden them and catch the drift, and learn from data without reading it. "
         f"A Kali terminal running msfconsole with an NK monogram banner. {PLAN} Contact: southkhanh@gmail.com. "
-        f"The service table lists open services: {services}; port 31337 is filtered and marked flag. The stack directory lists {names}."
+        f"The service table lists open services: {services}. The stack directory lists {names}."
     )
     comment = f"31337/tcp stage 2: {CTF_CIPHER}"
     return svg(w, h, window_frame(w, h, menu=True) + "".join(parts), base, anim, label, comment, fixed=False)
