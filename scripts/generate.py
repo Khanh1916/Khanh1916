@@ -563,26 +563,44 @@ def anim_secbaseline(repo):
     drifted = set(rng.sample(range(controls), 3))
     body = runs(20, 126, [("[audit] ", DIM), (f"{controls} CIS controls", TEXT)], 12)
     body += f'<g class="dr">{t(380, 126, "[! 3 DRIFT]", 12, RED, True, "end")}</g>'
-    base = ".dr{opacity:0}"
-    anim = "@keyframes dr{0%,74%{opacity:0}75%,90%{opacity:1}91%,100%{opacity:0}}.dr{animation:dr 10s linear infinite}"
+    # One loop: scan column by column, then the PASS count, then the drifted controls.
+    scan_start, scan_time, hold = 0.4, 4.0, 9.6
+    scanned, found = [""] * columns, ""
     for i in range(controls):
         cx = x0 + (i % columns) * (cell + gap)
         cy = y0 + (i // columns) * (cell + gap)
-        delay = i / controls * 4.0
-        body += f'<rect class="q" x="{cx}" y="{cy}" width="{cell}" height="{cell}" rx="1.5" fill="{GRID}" style="animation-delay:{delay:.2f}s"/>'
+        box = f'x="{cx}" y="{cy}" width="{cell}" height="{cell}" rx="1.5"'
+        body += f'<rect {box} fill="{LED_OFF}"/>'
+        scanned[i % columns] += f'<rect {box} fill="{GRID}"/>'
         if i in drifted:
-            body += f'<rect class="dr" x="{cx}" y="{cy}" width="{cell}" height="{cell}" rx="1.5" fill="{RED}"/>'
-    anim += "@keyframes qq{0%{fill:" + LED_OFF + "}4%,100%{fill:" + GRID + "}}.q{animation:qq 10s linear infinite}"
+            found += f'<rect {box} fill="{RED}"/>'
+    anim = ""
+    for column, rects in enumerate(scanned):
+        body += f'<g class="sc{column}">{rects}</g>'
+        anim += shown(f"sc{column}", scan_start + column * scan_time / columns, hold, total)
+    body += f'<g class="dr">{found}</g>'
     y = y0 + ((controls + columns - 1) // columns) * (cell + gap) + 20
     # The bar is drawn with rects: block glyphs differ in height from one fallback font to another.
     prefix, slots = "PASS [", 14
     bar_x, slot = 20 + len(prefix) * 12 * CW, 12 * CW
     body += t(20, y, prefix, 12, BLUE, True)
-    body += f'<rect x="{bar_x:.1f}" y="{y - 9}" width="{(slots - 1) * slot:.1f}" height="10" fill="{BLUE}"/>'
-    body += f'<rect x="{bar_x + (slots - 1) * slot:.1f}" y="{y - 9}" width="{slot:.1f}" height="10" fill="{BLUE}" fill-opacity=".3"/>'
-    body += t(bar_x + slots * slot, y, f"] {controls - 3}/{controls}", 12, BLUE, True)
+    body += (
+        f'<g class="bar" style="transform-origin:{bar_x:.1f}px {y - 4}px">'
+        f'<rect x="{bar_x:.1f}" y="{y - 9}" width="{(slots - 1) * slot:.1f}" height="10" fill="{BLUE}"/>'
+        f'<rect x="{bar_x + (slots - 1) * slot:.1f}" y="{y - 9}" width="{slot:.1f}" height="10" fill="{BLUE}" fill-opacity=".3"/>'
+        "</g>"
+    )
+    a, b, c = (v / total * 100 for v in (scan_start, scan_start + scan_time, hold))
+    anim += (
+        f"@keyframes bar{{0%,{a:.2f}%{{transform:scaleX(0)}}{b:.2f}%,{c:.2f}%{{transform:scaleX(1)}}"
+        f"{c + 0.02:.2f}%,100%{{transform:scaleX(0)}}}}.bar{{animation:bar {total}s linear infinite}}"
+    )
+    body += t(bar_x + slots * slot, y, "]", 12, BLUE, True)
+    body += f'<g class="rs">{t(bar_x + (slots + 2) * slot, y, f"{controls - 3}/{controls}", 12, BLUE, True)}</g>'
+    anim += shown("rs", scan_start + scan_time + 0.2, hold, total)
     body += f'<g class="dr">{t(380, y, "3 regressions", 12, RED, True, "end")}</g>'
-    return body, base, anim
+    anim += shown("dr", 5.4, hold, total)
+    return body, "", anim
 
 
 def anim_federated(repo):
@@ -622,14 +640,16 @@ def anim_federated(repo):
     body += t(box_x + box_w / 2, 169, "SecAgg+", 12.5, TITLE, True, "middle")
     body += f'<path class="fl" d="M{box_x + box_w + 2} {mid}h20" stroke="{GREEN}" stroke-width="1.5" stroke-dasharray="3 4"/>'
 
+    diagonals = [""] * 8
     for row in range(5):
         y = 145 + row * 8
-        cells = "".join(
-            f'<rect x="{230 + column * 12}" y="{y}" width="10" height="5" rx="1" fill="{GREEN}" fill-opacity="{rng.uniform(0.45, 1):.2f}"/>'
-            for column in range(4)
-        )
-        body += f'<g class="sy{row}">{cells}</g>'
-        anim += shown(f"sy{row}", 0.6 + row * 0.5, 5.6, total)
+        for column in range(4):
+            diagonals[row + column] += (
+                f'<rect x="{230 + column * 12}" y="{y}" width="10" height="5" rx="1" fill="{GREEN}" fill-opacity="{rng.uniform(0.45, 1):.2f}"/>'
+            )
+    for step, cells in enumerate(diagonals):
+        body += f'<g class="sy{step}">{cells}</g>'
+        anim += shown(f"sy{step}", 0.6 + step * 0.3, 5.6, total)
 
     body += f'<path class="fl" d="M280 {mid}h28" stroke="{ACCENT}" stroke-width="1.5" stroke-dasharray="3 4"/>'
     body += f'<rect x="312" y="150" width="54" height="30" rx="4" fill="{BG}" stroke="{BORDER}"/>'
